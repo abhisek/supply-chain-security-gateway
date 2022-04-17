@@ -1,0 +1,14 @@
+# Define a list of upstream channels to act as a gateway for. Currently
+# we will support only path based routing. This can be enhanced to
+# support host based routing as well
+upstreams:
+- name: maven-central
+  type: maven2
+  route:
+    prefix: /maven2
+  repository:
+    host: repo.maven.apache.org
+    port: 443
+    tls: true
+    sni: repo.maven.apache.org
+    authentication: {}
