@@ -1,0 +1,33 @@
+@startuml
+
+title "Data Plane Flow"
+
+actor Client as Client
+
+box "Data Plane"
+  participant "Gateway"
+  participant "PDP"
+  participant "PDS"
+  database "DataStore"
+end box
+
+box "Upstream"
+  participant "Upstream"
+end box
+
+Client -> Gateway: Access repo (e.g. Maven Central)
+Gateway -> PDP: Policy evaluation
+PDP -> PDS: Lookup artefact metadata
+PDS <-> DataStore: Lookup vulnerabilities and license information
+PDS -> PDP: Enriched artefact
+PDP -> PDP: Policy evaluation
+PDP -> Gateway: Policy decision
+
+alt Policy Allowed
+  Gateway -> Upstream: Proxy to upstream
+  Gateway -> Client: Response from upstream
+else Policy Denied
+  Gateway -> Client: Policy denied request
+end
+
+@enduml
