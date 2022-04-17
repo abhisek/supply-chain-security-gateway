@@ -40,7 +40,8 @@ func (s *authorizationService) Check(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	log.Printf("Authorizing upstream req: [%s/%s/%s][%s] %s", upstreamArtefact.Source.Type,
+	log.Printf("Authorizing upstream req: [%s/%s/%s/%s][%s] %s", upstreamArtefact.Source.Type,
+		upstreamArtefact.Group,
 		upstreamArtefact.Name, upstreamArtefact.Version,
 		httpReq.Method, httpReq.Path)
 

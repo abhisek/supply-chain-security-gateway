@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.3"
 services:
   envoy:
     image: envoyproxy/envoy:v1.21.1
@@ -12,5 +12,7 @@ services:
     command: pdp-server
     volumes:
       - ./config/global.yml:/config/global.yml
+      - ./policies:/policies
     environment:
       GLOBAL_CONFIG_PATH: /config/global.yml
+      PDP_POLICY_PATH: /policies
