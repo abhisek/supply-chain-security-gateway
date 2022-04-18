@@ -22,3 +22,13 @@ Policy Management:
 Data Collectors:
   ☐ Implement vulnerability collection for artefacts
   ☐ Implement license meta-data collection for artefacts
+
+Policy Data Service:
+  ☐ Finalise database technology to use
+  ☐ Finalise the database schema
+  ☐ Implement query API (gRPC)
+
+Admin Service:
+  ☐ RTFM and finalise the control plane architecture for Envoy, PDP, Tap etc.
+  ☐ Admin Service OpenAPI spec
+  ☐ Why separate config service? Why not have admin service directly do config injection?
