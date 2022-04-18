@@ -2,10 +2,15 @@ package pdp
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"log"
+	"os"
+	"os/signal"
 	"sync"
 	"time"
 
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	"github.com/open-policy-agent/opa/rego"
 )
 
@@ -31,7 +36,36 @@ func NewPolicyEngine(path string, changeMonitor bool) (*PolicyEngine, error) {
 }
 
 func (svc *PolicyEngine) Evaluate(input PolicyInput) (PolicyResponse, error) {
-	return PolicyResponse{Allow: true}, nil
+	log.Printf("Evaluating policy input: %s", utils.Introspect(input))
+
+	svc.lock.Lock()
+	defer svc.lock.Unlock()
+
+	rs, err := svc.query.Eval(context.Background(), rego.EvalInput(input))
+	if err != nil {
+		return PolicyResponse{}, err
+	}
+
+	if len(rs) == 0 || rs[0].Bindings["x"] == nil {
+		return PolicyResponse{}, errors.New("Policy evaluation returned unexpected result")
+	}
+
+	// TODO: Reflect x into p instead of using json hack
+
+	x := rs[0].Bindings["x"]
+	m, err := json.Marshal(x)
+	if err != nil {
+		return PolicyResponse{}, err
+	}
+
+	var p PolicyResponse
+	err = json.Unmarshal(m, &p)
+	if err != nil {
+		return PolicyResponse{}, err
+	}
+
+	log.Printf("Policy response: %s", utils.Introspect(p))
+	return p, nil
 }
 
 func (svc *PolicyEngine) Load(changeMonitor bool) error {
@@ -44,15 +78,28 @@ func (svc *PolicyEngine) Load(changeMonitor bool) error {
 	if changeMonitor {
 		d, err := time.ParseDuration(policyEvalChangeMonitorInterval)
 		if err != nil {
+			log.Printf("Failed to parse ticker duration for policy reload")
 			return err
 		}
 
-		go func() {
-			time.Sleep(d)
+		ticker := time.NewTicker(d)
+		tickerStop := make(chan os.Signal)
 
-			err := svc.loadPolicy()
-			if err != nil {
-				log.Printf("Failed to reload policy: %s", err.Error())
+		signal.Notify(tickerStop, os.Interrupt)
+		go func() {
+			for {
+				select {
+				case <-ticker.C:
+					log.Printf("Re-loading policy from path: %s", svc.repository)
+
+					err := svc.loadPolicy()
+					if err != nil {
+						log.Printf("Failed to reload policy: %s", err.Error())
+					}
+				case <-tickerStop:
+					ticker.Stop()
+					return
+				}
 			}
 		}()
 	}

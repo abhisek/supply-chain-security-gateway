@@ -29,6 +29,20 @@ docker-compose logs envoy
 docker-compose logs pdp
 ```
 
+The `gradle` build should fail with an error message indicating a dependency was blocked by the gateway.
+
+```
+> Could not resolve all files for configuration ':app:compileClasspath'.
+   > Could not resolve org.apache.logging.log4j:log4j:2.16.0.
+     Required by:
+         project :app
+      > Could not resolve org.apache.logging.log4j:log4j:2.16.0.
+         > Could not get resource 'http://localhost:10000/maven2/org/apache/logging/log4j/log4j/2.16.0/log4j-2.16.0.pom'.
+            > Could not GET 'http://localhost:10000/maven2/org/apache/logging/log4j/log4j/2.16.0/log4j-2.16.0.pom'. Received status code 403 from server: Forbidden
+```
+
+> Refer to `policies/example.rego` for the policy that blocked this artefact
+
 ## Architecture
 
 ![HLD](docs/images/supply-chain-gateway-hld.png)
@@ -55,3 +69,16 @@ GLOBAL_CONFIG_PATH=../config/global.yml PDP_POLICY_PATH=../policies ./out/pdp-se
 ```
 
 PDP listens on `0.0.0.0:9000`. To use the host instance of PDP, edit `config/envoy.yml` and set the address of the `ExtAuthZ` plugin to your host network address.
+
+### Policy Development
+
+Policies are written in [Rego](https://www.openpolicyagent.org/docs/latest/policy-language/) and evaluated with [Open Policy Agent](https://www.openpolicyagent.org/docs/latest/integration/#integrating-with-the-go-api)
+
+To run policy test cases:
+
+```bash
+cd policies && make test
+```
+
+* Refer to `policies/example.rego` for policy example
+* Policies are load from `./policies` directory

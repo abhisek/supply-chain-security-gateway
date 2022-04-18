@@ -41,15 +41,3 @@ type PolicyResponse struct {
 	Allow      bool              `json:"allow"`
 	Violations []PolicyViolation `json:"violations"`
 }
-
-func NewPolicyInputWithArtefact(target PolicyEvalTargetArtefact) PolicyInput {
-	return PolicyInput{
-		Kind: policyInputKind,
-		Version: PolicyInputVersion{
-			Major: policyInputMajorVersion,
-			Minor: policyInputMinorVersion,
-			Patch: policyInputPatchVersion,
-		},
-		Target: PolicyInputTarget{target},
-	}
-}

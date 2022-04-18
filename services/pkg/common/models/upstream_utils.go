@@ -52,10 +52,6 @@ func artefactForMaven2(parts []string) (Artefact, error) {
 	parts = parts[:len(parts)-3]
 	group := strings.Join(parts, ".")
 
-	return Artefact{
-		Source:  ArtefactSource{Type: ArtefactSourceTypeMaven2},
-		Name:    name,
-		Group:   group,
-		Version: version,
-	}, nil
+	return NewArtefact(ArtefactSource{Type: ArtefactSourceTypeMaven2},
+		name, group, version), nil
 }

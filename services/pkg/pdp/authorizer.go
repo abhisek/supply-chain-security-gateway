@@ -16,6 +16,10 @@ import (
 	"google.golang.org/genproto/googleapis/rpc/status"
 )
 
+var (
+	errPolicyDeniedUpStreamRequest = errors.New("policy denied upstream request")
+)
+
 type authorizationService struct {
 	config       *common_config.Config
 	policyEngine *PolicyEngine
@@ -45,6 +49,17 @@ func (s *authorizationService) Check(ctx context.Context,
 		upstreamArtefact.Group,
 		upstreamArtefact.Name, upstreamArtefact.Version,
 		httpReq.Method, httpReq.Path)
+
+	policyRespose, err := s.policyEngine.Evaluate(NewPolicyInputWithArtefact(upstreamArtefact))
+	if err != nil {
+		log.Printf("Failed to evaluate policy: %s", err.Error())
+		return &envoy_service_auth_v3.CheckResponse{}, err
+	}
+
+	if !policyRespose.Allowed() {
+		log.Printf("Policy denied upstream request")
+		return &envoy_service_auth_v3.CheckResponse{}, errPolicyDeniedUpStreamRequest
+	}
 
 	return &envoy_service_auth_v3.CheckResponse{
 		HttpResponse: &envoy_service_auth_v3.CheckResponse_OkResponse{

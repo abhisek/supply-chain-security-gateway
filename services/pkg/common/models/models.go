@@ -29,7 +29,7 @@ type ArtefactUpStream struct {
 }
 
 type ArtefactSource struct {
-	Type string
+	Type string `json:"type"`
 }
 
 // Align with CVSS v3 but keep room for enhancement
@@ -41,9 +41,9 @@ type ArtefactVulnerabilityId struct {
 }
 
 type ArtefactVulnerability struct {
-	Name  string
-	Id    ArtefactVulnerabilityId
-	Score ArtefactVulnerabilityScore
+	Name  string                     `json:"name"`
+	Id    ArtefactVulnerabilityId    `json:"id"`
+	Score ArtefactVulnerabilityScore `json:"score"`
 }
 
 // Align with SPDX / CycloneDX
@@ -51,10 +51,10 @@ type ArtefactLicense struct {
 }
 
 type Artefact struct {
-	Source          ArtefactSource
-	Group           string
-	Name            string
-	Version         string
-	Vulnerabilities []ArtefactVulnerability
-	Licenses        []ArtefactLicense
+	Source          ArtefactSource          `json:"source"`
+	Group           string                  `json:"group"`
+	Name            string                  `json:"name"`
+	Version         string                  `json:"version"`
+	Vulnerabilities []ArtefactVulnerability `json:"vulnerabilities"`
+	Licenses        []ArtefactLicense       `json:"licenses"`
 }
