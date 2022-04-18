@@ -17,6 +17,6 @@ WORKDIR /app
 COPY --from=build /build/out /app/server
 
 ENV PATH "${PATH}:/app/server"
-EXPOSE 9000
+EXPOSE 9000 9001
 
 USER nonroot:nonroot

@@ -12,3 +12,11 @@ upstreams:
     tls: true
     sni: repo.maven.apache.org
     authentication: {}
+tap:
+  events:
+    request: com.msg.event.upstream.request
+    response: com.msg.event.upstream.response
+    error: com.msg.event.upstream.error
+pdp:
+  events:
+    policy_denied: com.msg.event.pdp.policy_denied

@@ -16,7 +16,7 @@ Data Plane:
 Policy Management:
   ✔ Integrate OPA as policy engine @done(22-04-18 07:56)
   ✔ Finalise the policy input schema @done(22-04-18 07:56)
-  ☐ Implement policy evaluatioin on artefact model
+  ✔ Implement policy evaluatioin on artefact model @done(22-04-18 21:10)
   ☐ Enhance time based policy reload to use inotify/kqueue
 
 Data Collectors:

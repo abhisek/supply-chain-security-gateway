@@ -37,6 +37,21 @@ static_resources:
                   host_rewrite_literal: repo.maven.apache.org
                   cluster: service_maven_central
           http_filters:
+          - name: envoy.filters.http.ext_proc
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
+              failure_mode_allow: true
+              async_mode: true
+              processing_mode:
+                request_header_mode: "SEND"
+                response_header_mode: "SEND"
+                request_body_mode: "NONE"
+                response_body_mode: "NONE"
+                request_trailer_mode: "SKIP"
+                response_trailer_mode: "SKIP"
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: ext-processor-tap
           - name: envoy.filters.http.ext_authz
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
@@ -87,3 +102,19 @@ static_resources:
               socket_address:
                 address: pdp
                 port_value: 9000
+  - name: ext-processor-tap
+    type: LOGICAL_DNS
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config:
+          http2_protocol_options: {}
+    load_assignment:
+      cluster_name: ext-processor-tap
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: tap
+                port_value: 9001
