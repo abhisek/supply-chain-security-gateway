@@ -37,6 +37,7 @@ func (s *authorizationService) Check(ctx context.Context,
 
 	upstreamArtefact, err := s.resolveRequestedArtefact(httpReq)
 	if err != nil {
+		log.Printf("No artefact resolved: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 

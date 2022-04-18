@@ -33,8 +33,8 @@ type PolicyInput struct {
 }
 
 type PolicyViolation struct {
-	Code    int64
-	Message string
+	Code    int64  `json:"code"`
+	Message string `json:"message"`
 }
 
 type PolicyResponse struct {

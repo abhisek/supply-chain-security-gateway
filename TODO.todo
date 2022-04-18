@@ -1,0 +1,24 @@
+Gateway Core:
+  ✔ Adopt envoy proxy as the gateway @done(22-04-18 07:50)
+  ☐ Support path based routing to upstreams
+  ☐ Support upstream authentication with SDS
+  ☐ Support domain based routing
+  ☐ Support dynamic configuration with xDS
+
+Control Plane:
+  ☐ Define a common configuration schema for all components
+  ☐ Build a cli tool to generate service specific config from common config
+
+Data Plane:
+  ✔ Implement PDP and integrate with Envoy using ExtAuthZ @done(22-04-18 07:55)
+  ☐ Implement Tap and integrate with Envoy for event publishing
+
+Policy Management:
+  ✔ Integrate OPA as policy engine @done(22-04-18 07:56)
+  ✔ Finalise the policy input schema @done(22-04-18 07:56)
+  ☐ Implement policy evaluatioin on artefact model
+  ☐ Enhance time based policy reload to use inotify/kqueue
+
+Data Collectors:
+  ☐ Implement vulnerability collection for artefacts
+  ☐ Implement license meta-data collection for artefacts
