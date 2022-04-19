@@ -1,6 +1,6 @@
 Gateway Core:
   ✔ Adopt envoy proxy as the gateway @done(22-04-18 07:50)
-  ☐ Support path based routing to upstreams
+  ✔ Support path based routing to upstreams @done(22-04-19 08:23)
   ☐ Support upstream authentication with SDS
   ☐ Support domain based routing
   ☐ Support dynamic configuration with xDS
@@ -35,3 +35,4 @@ Admin Service:
 
 Other wishlist:
   ☐ Artefact provenance verification as per SLSA framework
+  ☐ mTLS for all internal communication
