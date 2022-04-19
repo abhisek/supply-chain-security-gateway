@@ -20,7 +20,7 @@ func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configu
 	server := grpc.NewServer(sopts...)
 	configure(server)
 
-	log.Printf("Starting %s gRPC server", name)
+	log.Printf("Starting %s gRPC server on %s:%s", name, host, port)
 	err = server.Serve(listener)
 
 	log.Fatalf("gRPC Server exit: %s", err.Error())

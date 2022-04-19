@@ -82,3 +82,24 @@ cd policies && make test
 
 * Refer to `policies/example.rego` for policy example
 * Policies are load from `./policies` directory
+
+### Tap Development
+
+The *Tap Service* is integrated as a Envoy [ExtProc](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/ext_proc_filter) filter. This means, it has greater control over Envoy's request processing life-cycle and can make changes if required.
+
+Currently, it is used for publishing events for data collection only but in future may be extended to support other use-cases. Tap service internally implements a handler chain to delegate an Envoy event to its internal handlers. Example:
+
+```go
+tapService, err := tap.NewTapService(config, []tap.TapHandlerRegistration{
+  tap.NewTapEventPublisherRegistration(),
+})
+```
+
+To build and use from host:
+
+```bash
+cd services && make
+GLOBAL_CONFIG_PATH=../config/global.yml ./out/tap-server
+```
+
+> To use Tap service from host, edit `envoy.yml` and change address of `ext-proc-tap` cluster.

@@ -18,7 +18,10 @@ func main() {
 		log.Fatalf("Failed to load config: %s", err.Error())
 	}
 
-	tapService, err := tap.NewTapService(config)
+	tapService, err := tap.NewTapService(config, []tap.TapHandlerRegistration{
+		tap.NewTapEventPublisherRegistration(),
+	})
+
 	if err != nil {
 		log.Fatalf("Failed to create tap service: %s", err.Error())
 	}
