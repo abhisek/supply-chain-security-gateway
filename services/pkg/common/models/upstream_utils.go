@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 )
@@ -11,6 +12,20 @@ var (
 	errIncorrectMaven2Path       = errors.New("incorrect maven2 path")
 	errUnimplementedUpstreamType = errors.New("path resolver for upstream type is not implemented")
 )
+
+func GetArtefactByHostAndPath(upstreams []ArtefactUpStream, host, path string) (Artefact, error) {
+	for _, upstream := range upstreams {
+		if upstream.MatchHost(host) && upstream.MatchPath(path) {
+			return upstream.Path2Artefact(path)
+		}
+	}
+
+	return Artefact{}, fmt.Errorf("no artefact resolved using %s/%s", host, path)
+}
+
+func (s ArtefactUpStream) MatchHost(host string) bool {
+	return (s.RoutingRule.Host == host)
+}
 
 func (s ArtefactUpStream) MatchPath(path string) bool {
 	path = filepath.Clean(path)

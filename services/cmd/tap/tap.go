@@ -19,7 +19,7 @@ func main() {
 	}
 
 	tapService, err := tap.NewTapService(config, []tap.TapHandlerRegistration{
-		tap.NewTapEventPublisherRegistration(),
+		tap.NewTapEventPublisherRegistration(config),
 	})
 
 	if err != nil {

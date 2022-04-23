@@ -11,7 +11,8 @@ Control Plane:
 
 Data Plane:
   ✔ Implement PDP and integrate with Envoy using ExtAuthZ @done(22-04-18 07:55)
-  ☐ Implement Tap and integrate with Envoy for event publishing
+  ✔ Implement Tap and integrate with Envoy for event publishing @done(22-04-19 18:07)
+  ☐ Adopt a messaging service and publish events
 
 Policy Management:
   ✔ Integrate OPA as policy engine @done(22-04-18 07:56)
