@@ -35,9 +35,11 @@ services:
       - ./pki/tap/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
+      GODEBUG: x509ignoreCN=0
       GLOBAL_CONFIG_PATH: /config/global.yml
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
+      SERVICE_TLS_ROOT_CA: /config/pki/root.crt
   dcs:
     build: ./services
     command: dcs-server
@@ -50,3 +52,4 @@ services:
       GLOBAL_CONFIG_PATH: /config/global.yml
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
+      SERVICE_TLS_ROOT_CA: /config/pki/root.crt

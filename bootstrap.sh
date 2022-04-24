@@ -8,15 +8,16 @@ openssl req -nodes -new -x509 \
   -keyout pki/root.key -out pki/root.crt \
   -subj $ROOT_SUBJ
 
-export SERVICES_IN_PKI="pdp tap dcs nats-server"
+export PARTICIPATING_SERVICES="pdp tap dcs nats-server"
 
-for svc in $SERVICES_IN_PKI; do
+for svc in $PARTICIPATING_SERVICES; do
   mkdir -p pki/$svc
 
   openssl genrsa -out pki/$svc/server.key 2048
 
   openssl req -new -sha256 -key pki/$svc/server.key \
-    -subj "/C=IN/ST=KA/O=WeekendLabs/CN=$svc.weekend.labs" \
+    -subj "/C=IN/ST=KA/O=WeekendLabs/CN=$svc" \
+    -addext "subjectAltName = DNS:$svc" \
     -out pki/$svc/server.csr
 
   openssl x509 -req -in pki/$svc/server.csr \

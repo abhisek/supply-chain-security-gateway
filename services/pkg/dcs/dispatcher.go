@@ -19,7 +19,8 @@ type eventSubscription[T any] struct {
 var dispatcherWg sync.WaitGroup
 
 func registerSubscriber[T any](msgService messaging.MessagingService, subscriber eventSubscription[T]) (messaging.MessagingQueueSubscription, error) {
-	log.Printf("Registering disaptcher name:%s topic:%s group:%s", subscriber.name, subscriber.topic, subscriber.group)
+	log.Printf("Registering disaptcher name:%s topic:%s group:%s",
+		subscriber.name, subscriber.topic, subscriber.group)
 
 	sub, err := msgService.QueueSubscribe(subscriber.topic, subscriber.group, func(msg interface{}) {
 		if event, ok := msg.(common_models.DomainEvent[T]); ok {
@@ -38,5 +39,6 @@ func registerSubscriber[T any](msgService messaging.MessagingService, subscriber
 }
 
 func waitForSubscribers() {
+	log.Printf("Dispatcher waiting for queue subscriptions to close")
 	dispatcherWg.Wait()
 }

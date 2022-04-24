@@ -111,3 +111,25 @@ GLOBAL_CONFIG_PATH=../config/global.yml ./out/tap-server
 ```
 
 > To use Tap service from host, edit `envoy.yml` and change address of `ext-proc-tap` cluster.
+
+### Debugging NATS Messaging
+
+Start a docker container with `nats` client
+
+```bash
+docker run --rm -it \
+   --network supply-chain-security-gateway_default \
+   -v `pwd`:/workspace \
+   synadia/nats-box
+```
+
+Subscribe to a subject and receive messages
+
+```bash
+GODEBUG=x509ignoreCN=0 nats sub \
+   --tlscert=/workspace/pki/tap/server.crt \
+   --tlskey=/workspace/pki/tap/server.key \
+   --tlsca=/workspace/pki/root.crt \
+   --server=tls://nats-server:4222 \
+   com.msg.event.upstream.request
+```

@@ -3,6 +3,7 @@ package messaging
 import (
 	"log"
 	"os"
+	"time"
 
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 
@@ -17,26 +18,41 @@ type natsMessagingService struct {
 
 func NewNatsMessagingService(config *common_config.Config) (MessagingService, error) {
 	certs := nats.ClientCert(os.Getenv("SERVICE_TLS_CERT"), os.Getenv("SERVICE_TLS_KEY"))
+	rootCA := nats.RootCAs(os.Getenv("SERVICE_TLS_ROOT_CA"))
 
 	log.Printf("Initializing new nats connection with: %s", config.Global.Messaging.Url)
 	conn, err := nats.Connect(config.Global.Messaging.Url,
 		nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(5),
+		nats.ReconnectWait(1*time.Second),
 		nats.ReconnectHandler(natsReconnectHandler()),
-		certs)
+		certs, rootCA)
+
+	// conn, err := nats.Connect(config.Global.Messaging.Url, nats.RetryOnFailedConnect(true), nats.MaxReconnects(5), nats.ReconnectWait(1*time.Second))
+	// if err != nil {
+	// 	return &natsMessagingService{}, err
+	// }
+
+	err = conn.Flush()
 	if err != nil {
 		return &natsMessagingService{}, err
 	}
 
-	conn.Flush()
-	log.Printf("NATS server connection initialized")
+	rtt, err := conn.RTT()
+	if err != nil {
+		return &natsMessagingService{}, err
+	}
+
+	log.Printf("NATS server connection initialized with RTT=%s", rtt)
 
 	jsonEncodedConn, err := nats.NewEncodedConn(conn, nats.JSON_ENCODER)
 	if err != nil {
 		return &natsMessagingService{}, err
 	}
 
-	return &natsMessagingService{config: config, connection: conn, jsonEncodedConnection: jsonEncodedConn}, nil
+	return &natsMessagingService{config: config,
+		connection:            conn,
+		jsonEncodedConnection: jsonEncodedConn}, nil
 }
 
 func (svc *natsMessagingService) QueueSubscribe(topic string, group string, handler func(msg interface{})) (MessagingQueueSubscription, error) {

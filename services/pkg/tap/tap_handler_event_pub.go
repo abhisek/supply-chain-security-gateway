@@ -42,8 +42,13 @@ func (h *tapEventPublisher) HandleRequestHeaders(ctx context.Context,
 	topic := h.config.Global.TapService.Publisher.TopicMappings["upstream_request"]
 	event := common_models.NewArtefactRequestEvent(artefact)
 
-	log.Printf("topic: %s event: %v\n", topic, event)
-	return h.messagingService.Publish(topic, event)
+	err = h.messagingService.Publish(topic, event)
+	if err != nil {
+		log.Printf("Error publishing event: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func (h *tapEventPublisher) HandleResponseHeaders(ctx context.Context,

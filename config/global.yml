@@ -13,7 +13,7 @@ upstreams:
     sni: repo.maven.apache.org
     authentication: {}
 messaging:
-  url: tls://nats-server:4442
+  url: tls://nats-server:4222
 tap:
   publisher:
     topics:
