@@ -4,6 +4,14 @@ A reference architecture and proof of concept implementation of a supply chain s
 
 ## TL;DR
 
+Initialize keys and certificates for mTLS
+
+```bash
+sh bootstrap.sh
+```
+
+> This will generate root certificate, per service certificates in `pki/`
+
 Start the services using `docker-compose`
 
 ```bash
@@ -56,7 +64,7 @@ The `gradle` build should fail with an error message indicating a dependency was
 If you are developing on any of the service and want to force re-create the containers with updated image:
 
 ```bash
-docker-compose up --force-recreate --build -d
+docker-compose up --force-recreate --remove-orphans --build -d
 ```
 
 ### PDP Development

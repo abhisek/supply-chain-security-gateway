@@ -12,11 +12,14 @@ upstreams:
     tls: true
     sni: repo.maven.apache.org
     authentication: {}
+messaging:
+  url: tls://nats-server:4442
 tap:
-  events:
-    request: com.msg.event.upstream.request
-    response: com.msg.event.upstream.response
-    error: com.msg.event.upstream.error
+  publisher:
+    topics:
+      upstream_request: com.msg.event.upstream.request
+      upstream_response: com.msg.event.upstream.response
 pdp:
-  events:
-    policy_denied: com.msg.event.pdp.policy_denied
+  publisher:
+    topics:
+      policy_denied: com.msg.event.pdp.policy_denied

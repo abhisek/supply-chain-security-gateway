@@ -12,7 +12,7 @@ Control Plane:
 Data Plane:
   ✔ Implement PDP and integrate with Envoy using ExtAuthZ @done(22-04-18 07:55)
   ✔ Implement Tap and integrate with Envoy for event publishing @done(22-04-19 18:07)
-  ☐ Adopt a messaging service and publish events
+  ✔ Adopt a messaging service and publish events @done(22-04-23 09:55)
 
 Policy Management:
   ✔ Integrate OPA as policy engine @done(22-04-18 07:56)
@@ -23,6 +23,7 @@ Policy Management:
 Data Collectors:
   ☐ Implement vulnerability collection for artefacts
   ☐ Implement license meta-data collection for artefacts
+  ☐ Implement SBOM generator through TAP events
 
 Policy Data Service:
   ☐ Finalise database technology to use

@@ -7,25 +7,26 @@ import (
 	"strings"
 
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 
 	envoy_v3_ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 )
 
 type tapEventPublisher struct {
-	config *common_config.Config
+	config           *common_config.Config
+	messagingService messaging.MessagingService
 }
 
-func NewTapEventPublisherRegistration(config *common_config.Config) TapHandlerRegistration {
+func NewTapEventPublisherRegistration(config *common_config.Config, msgService messaging.MessagingService) TapHandlerRegistration {
 	return TapHandlerRegistration{
 		ContinueOnError: true,
-		Handler:         &tapEventPublisher{config: config},
+		Handler:         &tapEventPublisher{config: config, messagingService: msgService},
 	}
 }
 
 func (h *tapEventPublisher) HandleRequestHeaders(ctx context.Context,
-	req *envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders,
-	resp *envoy_v3_ext_proc_pb.ProcessingResponse) error {
+	req *envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders) error {
 
 	log.Printf("Publishing request headers event")
 	path, err := findHeaderValue(req, "path")
@@ -38,15 +39,15 @@ func (h *tapEventPublisher) HandleRequestHeaders(ctx context.Context,
 		return fmt.Errorf("Failed to resolve artefact")
 	}
 
+	topic := h.config.Global.TapService.Publisher.TopicMappings["upstream_request"]
 	event := common_models.NewArtefactRequestEvent(artefact)
-	fmt.Printf("event: %v\n", event)
 
-	return nil
+	log.Printf("topic: %s event: %v\n", topic, event)
+	return h.messagingService.Publish(topic, event)
 }
 
 func (h *tapEventPublisher) HandleResponseHeaders(ctx context.Context,
-	req *envoy_v3_ext_proc_pb.ProcessingRequest_ResponseHeaders,
-	resp *envoy_v3_ext_proc_pb.ProcessingResponse) error {
+	req *envoy_v3_ext_proc_pb.ProcessingRequest_ResponseHeaders) error {
 
 	log.Printf("Publishing response headers event - NOP")
 	return nil

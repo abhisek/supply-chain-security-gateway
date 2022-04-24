@@ -8,11 +8,9 @@ import (
 
 type TapHandler interface {
 	HandleRequestHeaders(context.Context,
-		*envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders,
-		*envoy_v3_ext_proc_pb.ProcessingResponse) error
+		*envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders) error
 	HandleResponseHeaders(context.Context,
-		*envoy_v3_ext_proc_pb.ProcessingRequest_ResponseHeaders,
-		*envoy_v3_ext_proc_pb.ProcessingResponse) error
+		*envoy_v3_ext_proc_pb.ProcessingRequest_ResponseHeaders) error
 }
 
 type TapHandlerRegistration struct {

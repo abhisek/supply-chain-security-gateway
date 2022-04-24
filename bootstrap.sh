@@ -8,7 +8,7 @@ openssl req -nodes -new -x509 \
   -keyout pki/root.key -out pki/root.crt \
   -subj $ROOT_SUBJ
 
-export SERVICES_IN_PKI="pdp tap nats"
+export SERVICES_IN_PKI="pdp tap dcs nats-server"
 
 for svc in $SERVICES_IN_PKI; do
   mkdir -p pki/$svc
@@ -23,3 +23,9 @@ for svc in $SERVICES_IN_PKI; do
     -CA pki/root.crt -CAkey pki/root.key -CAcreateserial \
     -out pki/$svc/server.crt -days 30 -sha256
 done
+
+# This is insecure but is needed for docker-compose
+# In a production environment, we must use a cert manager instead of
+# manually generating certificates
+
+find ./pki -type f -exec chmod 644 {} \;

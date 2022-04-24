@@ -7,10 +7,16 @@ services:
       - ./config/envoy.yml:/config/envoy.yml
     ports:
       - "10000:10000"
-  nats:
+  nats-server:
     image: nats:2.7-alpine
     ports:
       - "8222:8222"
+    command: -c /config/server.conf
+    volumes:
+      - ./config/nats-server.conf:/config/server.conf
+      - ./pki/nats-server/server.crt:/config/pki/server.crt
+      - ./pki/nats-server/server.key:/config/pki/server.key
+      - ./pki/root.crt:/config/pki/root.crt
   pdp:
     build: ./services
     command: pdp-server
@@ -25,5 +31,22 @@ services:
     command: tap-server
     volumes:
       - ./config/global.yml:/config/global.yml
+      - ./pki/tap/server.crt:/config/pki/server.crt
+      - ./pki/tap/server.key:/config/pki/server.key
+      - ./pki/root.crt:/config/pki/root.crt
     environment:
       GLOBAL_CONFIG_PATH: /config/global.yml
+      SERVICE_TLS_CERT: /config/pki/server.crt
+      SERVICE_TLS_KEY: /config/pki/server.key
+  dcs:
+    build: ./services
+    command: dcs-server
+    volumes:
+      - ./config/global.yml:/config/global.yml
+      - ./pki/dcs/server.crt:/config/pki/server.crt
+      - ./pki/dcs/server.key:/config/pki/server.key
+      - ./pki/root.crt:/config/pki/root.crt
+    environment:
+      GLOBAL_CONFIG_PATH: /config/global.yml
+      SERVICE_TLS_CERT: /config/pki/server.crt
+      SERVICE_TLS_KEY: /config/pki/server.key

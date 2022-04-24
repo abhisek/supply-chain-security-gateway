@@ -34,10 +34,14 @@ type ArtefactSource struct {
 
 // Align with CVSS v3 but keep room for enhancement
 type ArtefactVulnerabilityScore struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }
 
 // Align with CVE but keep room for enhancement
 type ArtefactVulnerabilityId struct {
+	Source string `json:"source"`
+	Id     string `json:"id"`
 }
 
 type ArtefactVulnerability struct {

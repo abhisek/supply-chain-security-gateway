@@ -8,8 +8,27 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type MessagingConfig struct {
+	Url string `json:"url"`
+}
+
+type EventPublisherConfig struct {
+	TopicMappings map[string]string `yaml:"topics"`
+}
+
+type TapServiceConfig struct {
+	Publisher EventPublisherConfig `yaml:"publisher"`
+}
+
+type PdpServiceConfig struct {
+	Publisher EventPublisherConfig `yaml:"publisher"`
+}
+
 type GlobalConfig struct {
-	Upstreams []models.ArtefactUpStream `yaml:"upstreams"`
+	Upstreams  []models.ArtefactUpStream `yaml:"upstreams"`
+	Messaging  MessagingConfig           `yaml:"messaging"`
+	TapService TapServiceConfig          `yaml:"tap"`
+	PdpService PdpServiceConfig          `yaml:"pdp"`
 }
 
 type Config struct {

@@ -5,6 +5,7 @@ import (
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/tap"
 
 	envoy_v3_ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
@@ -18,8 +19,13 @@ func main() {
 		log.Fatalf("Failed to load config: %s", err.Error())
 	}
 
-	tapService, err := tap.NewTapService(config, []tap.TapHandlerRegistration{
-		tap.NewTapEventPublisherRegistration(config),
+	msgService, err := messaging.NewNatsMessagingService(config)
+	if err != nil {
+		log.Fatalf("Failed to create messaging service: %v", err)
+	}
+
+	tapService, err := tap.NewTapService(config, msgService, []tap.TapHandlerRegistration{
+		tap.NewTapEventPublisherRegistration(config, msgService),
 	})
 
 	if err != nil {
