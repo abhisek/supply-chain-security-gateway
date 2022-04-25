@@ -23,15 +23,6 @@ static_resources:
               routes:
               - match:
                   prefix: "/maven2"
-                request_headers_to_add:
-                  - header:
-                      key: x-upstream-prefix
-                      value: /maven2
-                    append: true
-                  - header:
-                      key: x-upstream-type
-                      value: maven2
-                    append: true
                 route:
                   timeout: 0s
                   host_rewrite_literal: repo.maven.apache.org

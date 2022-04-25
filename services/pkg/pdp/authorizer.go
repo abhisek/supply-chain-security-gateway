@@ -39,7 +39,7 @@ func (s *authorizationService) Check(ctx context.Context,
 
 	httpReq := req.Attributes.Request.Http
 
-	upstreamArtefact, err := s.resolveRequestedArtefact(httpReq)
+	upstreamArtefact, upstream, err := s.resolveRequestedArtefact(httpReq)
 	if err != nil {
 		log.Printf("No artefact resolved: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
@@ -50,7 +50,7 @@ func (s *authorizationService) Check(ctx context.Context,
 		upstreamArtefact.Name, upstreamArtefact.Version,
 		httpReq.Method, httpReq.Path)
 
-	policyRespose, err := s.policyEngine.Evaluate(NewPolicyInputWithArtefact(upstreamArtefact))
+	policyRespose, err := s.policyEngine.Evaluate(NewPolicyInputWithArtefact(upstreamArtefact, upstream))
 	if err != nil {
 		log.Printf("Failed to evaluate policy: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
@@ -81,12 +81,16 @@ func (s *authorizationService) Check(ctx context.Context,
 	}, nil
 }
 
-func (s *authorizationService) resolveRequestedArtefact(req *envoy_service_auth_v3.AttributeContext_HttpRequest) (common_models.Artefact, error) {
+func (s *authorizationService) resolveRequestedArtefact(req *envoy_service_auth_v3.AttributeContext_HttpRequest) (common_models.Artefact,
+	common_models.ArtefactUpStream, error) {
 	for _, upstream := range s.config.Global.Upstreams {
 		if upstream.MatchPath(req.Path) {
-			return upstream.Path2Artefact(req.Path)
+			a, err := upstream.Path2Artefact(req.Path)
+			return a, upstream, err
 		}
 	}
 
-	return common_models.Artefact{}, errors.New("failed to resolve artefact from upstream config")
+	return common_models.Artefact{},
+		common_models.ArtefactUpStream{},
+		errors.New("failed to resolve artefact from upstream config")
 }

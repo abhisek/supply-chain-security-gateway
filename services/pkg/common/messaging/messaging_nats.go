@@ -25,13 +25,13 @@ func NewNatsMessagingService(config *common_config.Config) (MessagingService, er
 		nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(5),
 		nats.ReconnectWait(1*time.Second),
-		nats.ReconnectHandler(natsReconnectHandler()),
 		certs, rootCA)
 
 	// conn, err := nats.Connect(config.Global.Messaging.Url, nats.RetryOnFailedConnect(true), nats.MaxReconnects(5), nats.ReconnectWait(1*time.Second))
-	// if err != nil {
-	// 	return &natsMessagingService{}, err
-	// }
+
+	if err != nil {
+		return &natsMessagingService{}, err
+	}
 
 	err = conn.Flush()
 	if err != nil {
@@ -61,10 +61,4 @@ func (svc *natsMessagingService) QueueSubscribe(topic string, group string, hand
 
 func (svc *natsMessagingService) Publish(topic string, msg interface{}) error {
 	return svc.jsonEncodedConnection.Publish(topic, msg)
-}
-
-func natsReconnectHandler() func(*nats.Conn) {
-	return func(conn *nats.Conn) {
-		log.Printf("Establishing connection with NATS server")
-	}
 }

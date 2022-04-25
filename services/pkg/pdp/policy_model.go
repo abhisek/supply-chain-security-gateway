@@ -16,6 +16,10 @@ type PolicyEvalTargetArtefact struct {
 	common_models.Artefact
 }
 
+type PolicyEvalTargetUpstream struct {
+	common_models.ArtefactUpStream
+}
+
 type PolicyInputVersion struct {
 	Major int8 `json:"major"`
 	Minor int8 `json:"minor"`
@@ -24,6 +28,7 @@ type PolicyInputVersion struct {
 
 type PolicyInputTarget struct {
 	Artefact PolicyEvalTargetArtefact `json:"artefact"`
+	Upstream PolicyEvalTargetUpstream `json:"upstream"`
 }
 
 type PolicyInput struct {

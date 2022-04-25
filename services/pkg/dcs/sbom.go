@@ -9,20 +9,34 @@ import (
 
 const (
 	sbomCollectorGroupName = "sbom-collector-group"
+	sbomCollectorName      = "SBOM Data Collector"
 )
 
+type sbomCollector struct {
+	config *common_config.Config
+}
+
 func sbomCollectorSubscription(config *common_config.Config) eventSubscription[common_models.Artefact] {
+	h := &sbomCollector{config: config}
+	return h.subscription()
+}
+
+func (s *sbomCollector) subscription() eventSubscription[common_models.Artefact] {
 	return eventSubscription[common_models.Artefact]{
-		name:    "SBOM Data Collector",
-		topic:   config.Global.TapService.Publisher.TopicMappings["upstream_request"],
+		name:    sbomCollectorName,
 		group:   sbomCollectorGroupName,
-		handler: sbomCollectorHandler(),
+		topic:   s.config.Global.TapService.Publisher.TopicMappings["upstream_request"],
+		handler: s.handler(),
 	}
 }
 
-func sbomCollectorHandler() eventSubscriptionHandler[common_models.Artefact] {
+func (s *sbomCollector) handler() eventSubscriptionHandler[common_models.Artefact] {
 	return func(event common_models.DomainEvent[common_models.Artefact]) error {
-		log.Printf("SBOM collector - Handling artefact: %v", event.Data)
-		return nil
+		return s.handle(event)
 	}
+}
+
+func (s *sbomCollector) handle(event common_models.DomainEvent[common_models.Artefact]) error {
+	log.Printf("SBOM collector - Handling artefact: %v", event.Data)
+	return nil
 }

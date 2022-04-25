@@ -4,6 +4,9 @@ const (
 	ArtefactSourceTypeMaven2 = "maven2"
 	ArtefactSourceTypeNpm    = "npm"
 	ArtefactSourceTypePypi   = "pypi"
+
+	ArtefactLicenseTypeSpdx      = "spdx"
+	ArtefactLicenseTypeCycloneDx = "cyclonedx"
 )
 
 type ArtefactChannelAuthentication struct{}
@@ -52,6 +55,9 @@ type ArtefactVulnerability struct {
 
 // Align with SPDX / CycloneDX
 type ArtefactLicense struct {
+	Type string `json:"type"`
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type Artefact struct {

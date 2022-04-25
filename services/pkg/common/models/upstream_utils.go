@@ -13,6 +13,16 @@ var (
 	errUnimplementedUpstreamType = errors.New("path resolver for upstream type is not implemented")
 )
 
+func GetUpstreamByHostAndPath(upstreams []ArtefactUpStream, host, path string) (ArtefactUpStream, error) {
+	for _, upstream := range upstreams {
+		if upstream.MatchHost(host) && upstream.MatchPath(path) {
+			return upstream, nil
+		}
+	}
+
+	return ArtefactUpStream{}, fmt.Errorf("no upstream resolved using %s/%s", host, path)
+}
+
 func GetArtefactByHostAndPath(upstreams []ArtefactUpStream, host, path string) (Artefact, error) {
 	for _, upstream := range upstreams {
 		if upstream.MatchHost(host) && upstream.MatchPath(path) {

@@ -10,7 +10,7 @@ Initialize keys and certificates for mTLS
 sh bootstrap.sh
 ```
 
-> This will generate root certificate, per service certificates in `pki/`
+> This will generate root certificate, per service certificates in `pki/`.
 
 Start the services using `docker-compose`
 
@@ -112,7 +112,7 @@ GLOBAL_CONFIG_PATH=../config/global.yml ./out/tap-server
 
 > To use Tap service from host, edit `envoy.yml` and change address of `ext-proc-tap` cluster.
 
-### Debugging NATS Messaging
+### Debug NATS Messaging
 
 Start a docker container with `nats` client
 

@@ -8,6 +8,8 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
+
+ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 RUN make
 
 FROM gcr.io/distroless/base-debian10
