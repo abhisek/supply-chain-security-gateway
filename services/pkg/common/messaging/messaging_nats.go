@@ -27,8 +27,6 @@ func NewNatsMessagingService(config *common_config.Config) (MessagingService, er
 		nats.ReconnectWait(1*time.Second),
 		certs, rootCA)
 
-	// conn, err := nats.Connect(config.Global.Messaging.Url, nats.RetryOnFailedConnect(true), nats.MaxReconnects(5), nats.ReconnectWait(1*time.Second))
-
 	if err != nil {
 		return &natsMessagingService{}, err
 	}

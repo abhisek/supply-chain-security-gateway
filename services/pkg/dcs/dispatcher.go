@@ -6,6 +6,7 @@ import (
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 )
 
 type eventSubscriptionHandler[T any] func(common_models.DomainEvent[T]) error
@@ -23,10 +24,11 @@ func registerSubscriber[T any](msgService messaging.MessagingService, subscriber
 		subscriber.name, subscriber.topic, subscriber.group)
 
 	sub, err := msgService.QueueSubscribe(subscriber.topic, subscriber.group, func(msg interface{}) {
-		if event, ok := msg.(common_models.DomainEvent[T]); ok {
+		var event common_models.DomainEvent[T]
+		if err := utils.MapStruct(msg, &event); err == nil {
 			subscriber.handler(event)
 		} else {
-			log.Printf("Error creating a domain event of type T from event msg")
+			log.Printf("Error creating a domain event of type T from event msg: %v", err)
 		}
 	})
 

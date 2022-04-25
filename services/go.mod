@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/envoyproxy/go-control-plane v0.10.1
 	github.com/golang/protobuf v1.5.2
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/nats-io/nats.go v1.14.0
 	github.com/open-policy-agent/opa v0.39.0
 	github.com/stretchr/testify v1.7.1

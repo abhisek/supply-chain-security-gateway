@@ -3,6 +3,8 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 // Serialize an interface using JSON or return error string
@@ -13,4 +15,8 @@ func Introspect(v interface{}) string {
 	} else {
 		return string(bytes)
 	}
+}
+
+func MapStruct[T any](source interface{}, dest *T) error {
+	return mapstructure.Decode(source, dest)
 }
