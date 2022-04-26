@@ -2,6 +2,18 @@
 
 A reference architecture and proof of concept implementation of a supply chain security gateway with the goal of enforcing sane security policies to an organization's consumption of 3rd party software in its own products.
 
+- [Supply Chain Security Gateway](#supply-chain-security-gateway)
+  - [TL;DR](#tldr)
+  - [Architecture](#architecture)
+    - [Data Plane Flow](#data-plane-flow)
+  - [Usage](#usage)
+    - [Authentication](#authentication)
+  - [Development](#development)
+    - [PDP Development](#pdp-development)
+    - [Policy Development](#policy-development)
+    - [Tap Development](#tap-development)
+    - [Debug NATS Messaging](#debug-nats-messaging)
+
 ## TL;DR
 
 Initialize keys and certificates for mTLS
@@ -66,6 +78,15 @@ If you are developing on any of the service and want to force re-create the cont
 ```bash
 docker-compose up --force-recreate --remove-orphans --build -d
 ```
+
+### Authentication
+
+No real authentication is supported yet. Following are planned:
+
+* Gateway authentication using pluggable IDP such as Github OIDC
+* Upstream repository basic authentication
+
+## Development
 
 ### PDP Development
 

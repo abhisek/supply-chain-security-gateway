@@ -33,6 +33,10 @@ func GetArtefactByHostAndPath(upstreams []ArtefactUpStream, host, path string) (
 	return Artefact{}, fmt.Errorf("no artefact resolved using %s/%s", host, path)
 }
 
+func (s ArtefactUpStream) NeedAuthentication() bool {
+	return s.Authentication.Type != ArtefactUpstreamAuthTypeNoAuth
+}
+
 func (s ArtefactUpStream) MatchHost(host string) bool {
 	return (s.RoutingRule.Host == host)
 }

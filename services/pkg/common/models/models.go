@@ -5,17 +5,26 @@ const (
 	ArtefactSourceTypeNpm    = "npm"
 	ArtefactSourceTypePypi   = "pypi"
 
+	ArtefactUpstreamAuthTypeNoAuth = "noauth"
+
 	ArtefactLicenseTypeSpdx      = "spdx"
 	ArtefactLicenseTypeCycloneDx = "cyclonedx"
 )
 
-type ArtefactChannelAuthentication struct{}
+type ArtefactRepositoryAuthentication struct {
+	Type string `yaml:"type"`
+}
+
+type ArtefactUpstreamAuthentication struct {
+	Type string `yaml:"type"`
+}
 
 type ArtefactRepository struct {
-	Host string `yaml:"host"`
-	Port int16  `yaml:"port"`
-	Tls  bool   `yaml:"tls"`
-	Sni  string `yaml:"sni"`
+	Host           string                           `yaml:"host"`
+	Port           int16                            `yaml:"port"`
+	Tls            bool                             `yaml:"tls"`
+	Sni            string                           `yaml:"sni"`
+	Authentication ArtefactRepositoryAuthentication `yaml:"authentication"`
 }
 
 type ArtefactRoutingRule struct {
@@ -24,18 +33,18 @@ type ArtefactRoutingRule struct {
 }
 
 type ArtefactUpStream struct {
-	Name           string                        `yaml:"name"`
-	Type           string                        `yaml:"type"`
-	RoutingRule    ArtefactRoutingRule           `yaml:"route"`
-	Authentication ArtefactChannelAuthentication `yaml:"authentication"`
-	Repository     ArtefactRepository            `yaml:"repository"`
+	Name           string                         `yaml:"name"`
+	Type           string                         `yaml:"type"`
+	RoutingRule    ArtefactRoutingRule            `yaml:"route"`
+	Repository     ArtefactRepository             `yaml:"repository"`
+	Authentication ArtefactUpstreamAuthentication `yaml:"authentication"`
 }
 
 type ArtefactSource struct {
 	Type string `json:"type"`
 }
 
-// Align with CVSS v3 but keep room for enhancement
+// Align with CVSS v3 but keep room
 type ArtefactVulnerabilityScore struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`

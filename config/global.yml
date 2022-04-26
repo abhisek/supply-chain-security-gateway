@@ -4,6 +4,8 @@
 upstreams:
 - name: maven-central
   type: maven2
+  authentication:
+    type: basic
   route:
     prefix: /maven2
   repository:
