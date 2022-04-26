@@ -14,9 +14,27 @@ func NewVulnerabilityRepository(adapter adapters.SqlDataAdapter) (*Vulnerability
 }
 
 func (r *VulnerabilityRepository) Upsert(vulnerability models.Vulnerability) error {
-	return nil
+	db, err := r.adapter.GetDB()
+	if err != nil {
+		return err
+	}
+
+	tx := db.Create(&vulnerability)
+	return tx.Error
 }
 
 func (r *VulnerabilityRepository) Lookup(ecosystem, group, name string) ([]models.Vulnerability, error) {
-	return []models.Vulnerability{}, nil
+	vulnerabilities := make([]models.Vulnerability, 0)
+	db, err := r.adapter.GetDB()
+	if err != nil {
+		return vulnerabilities, err
+	}
+
+	tx := db.Where(&models.Vulnerability{
+		Ecosystem: ecosystem,
+		Group:     group,
+		Name:      name,
+	}).Find(&vulnerabilities)
+
+	return vulnerabilities, tx.Error
 }
