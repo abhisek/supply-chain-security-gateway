@@ -7,6 +7,13 @@ services:
       - ./config/envoy.yml:/config/envoy.yml
     ports:
       - "10000:10000"
+  mysql-server:
+    image: mysql:8.0
+    volumes:
+      - mysql-db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
   nats-server:
     image: nats:2.7-alpine
     ports:
@@ -40,6 +47,8 @@ services:
       SERVICE_TLS_KEY: /config/pki/server.key
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
   dcs:
+    depends_on:
+      - mysql-server
     build: ./services
     command: dcs-server
     volumes:
@@ -52,3 +61,10 @@ services:
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
+      MYSQL_SERVER_HOST: mysql-server
+      MYSQL_SERVER_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
+      MYSQL_USER: ${MYSQL_DCS_USER}
+      MYSQL_PASSWORD: ${MYSQL_DCS_PASSWORD}
+volumes:
+  mysql-db: {}

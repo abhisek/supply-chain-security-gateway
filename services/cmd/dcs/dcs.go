@@ -2,8 +2,12 @@ package main
 
 import (
 	"log"
+	"os"
+	"strconv"
 
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db/adapters"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/dcs"
 )
@@ -19,7 +23,33 @@ func main() {
 		log.Fatalf("Failed to create messaging service: %v", err)
 	}
 
-	dcs, err := dcs.NewDataCollectionService(config, msgService)
+	mysqlPort, err := strconv.ParseInt(os.Getenv("MYSQL_SERVER_PORT"), 0, 16)
+	if err != nil {
+		log.Fatalf("Failed to parse mysql server port: %v", err)
+	}
+
+	mysqlAdapter, err := adapters.NewMySqlAdapter(adapters.MySqlAdapterConfig{
+		Host:     os.Getenv("MYSQL_SERVER_HOST"),
+		Port:     int16(mysqlPort),
+		Username: os.Getenv("MYSQL_USER"),
+		Password: os.Getenv("MYSQL_PASSWORD"),
+		Database: os.Getenv("MYSQL_DATABASE"),
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize MySQL adapter: %v", err)
+	}
+
+	err = db.MigrateSqlModels(mysqlAdapter)
+	if err != nil {
+		log.Fatalf("Failed to run MySQL migration: %v", err)
+	}
+
+	repository, err := db.NewVulnerabilityRepository(mysqlAdapter)
+	if err != nil {
+		log.Fatalf("Failed to create vulnerability repository")
+	}
+
+	dcs, err := dcs.NewDataCollectionService(config, msgService, repository)
 	if err != nil {
 		log.Fatalf("Failed to created DCS: %v", err)
 	}

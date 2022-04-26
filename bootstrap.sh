@@ -39,3 +39,12 @@ done
 # manually generating certificates
 
 find ./pki -type f -exec chmod 644 {} \;
+
+# Generate secrets
+mysql_root_pass=$(openssl rand -hex 32)
+cat > .env <<_EOF
+MYSQL_ROOT_PASSWORD=$mysql_root_pass
+MYSQL_DCS_DATABASE=vdb
+MYSQL_DCS_USER=root
+MYSQL_DCS_PASSWORD=$mysql_root_pass
+_EOF
