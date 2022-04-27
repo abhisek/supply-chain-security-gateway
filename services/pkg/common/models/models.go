@@ -1,9 +1,10 @@
 package models
 
 const (
-	ArtefactSourceTypeMaven2 = "maven2"
-	ArtefactSourceTypeNpm    = "npm"
-	ArtefactSourceTypePypi   = "pypi"
+	ArtefactSourceTypeMaven2   = "maven2"
+	ArtefactSourceTypeNpm      = "npm"
+	ArtefactSourceTypePypi     = "pypi"
+	ArtefactSourceTypeRubyGems = "rubygems"
 
 	ArtefactUpstreamAuthTypeNoAuth = "noauth"
 
@@ -46,8 +47,9 @@ type ArtefactSource struct {
 
 // Align with CVSS v3 but keep room
 type ArtefactVulnerabilityScore struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type     string `json:"type"`
+	Value    string `json:"value"`
+	Severity string `json:"severity"`
 }
 
 // Align with CVE but keep room for enhancement

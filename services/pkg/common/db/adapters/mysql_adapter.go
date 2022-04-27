@@ -57,8 +57,8 @@ func (m *MySqlAdapter) GetDB() (*gorm.DB, error) {
 	return m.db, nil
 }
 
-func (m *MySqlAdapter) Migrate(models ...interface{}) error {
-	return m.db.AutoMigrate(models)
+func (m *MySqlAdapter) Migrate(tables ...interface{}) error {
+	return m.db.AutoMigrate(tables...)
 }
 
 func (m *MySqlAdapter) Ping() error {
