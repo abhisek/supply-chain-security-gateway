@@ -37,6 +37,8 @@ dependencies {
 
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:30.1.1-jre'
+    implementation 'org.apache.commons:commons-collections4:4.1'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.4.6'
 
     // Vulnerable dependency to trigger example policy
     implementation 'org.apache.logging.log4j:log4j:2.16.0'

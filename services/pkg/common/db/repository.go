@@ -27,11 +27,15 @@ func (r *VulnerabilityRepository) Upsert(vulnerability models.Vulnerability) err
 			ExternalId:     vulnerability.ExternalId,
 		}).Find(&records)
 
-		if ntx.Error == nil && len(records) > 0 && records[0].DataModifiedAt.Unix() < vulnerability.DataModifiedAt.Unix() {
-			vulnerability.ID = records[0].ID
+		if ntx.Error == nil && len(records) > 0 {
+			if records[0].DataModifiedAt.Unix() < vulnerability.DataModifiedAt.Unix() {
+				vulnerability.ID = records[0].ID
+				ntx = db.Save(&vulnerability)
+			}
+		} else {
+			ntx = db.Create(&vulnerability)
 		}
 
-		ntx = db.Save(&vulnerability)
 		return ntx.Error
 	})
 
