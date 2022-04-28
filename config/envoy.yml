@@ -18,7 +18,7 @@ static_resources:
           route_config:
             name: local_route
             virtual_hosts:
-            - name: local_service
+            - name: repository_proxy_service
               domains: ["*"]
               routes:
               - match:
@@ -27,6 +27,13 @@ static_resources:
                   timeout: 0s
                   host_rewrite_literal: repo.maven.apache.org
                   cluster: service_maven_central
+              - match:
+                  prefix: "/pypi"
+                route:
+                  timeout: 0s
+                  host_rewrite_literal: pypi.org
+                  prefix_rewrite: /
+                  cluster: service_pypi_org
           http_filters:
           - name: envoy.filters.http.ext_proc
             typed_config:
@@ -77,6 +84,23 @@ static_resources:
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
         sni: repo.maven.apache.org
+  - name: service_pypi_org
+    type: LOGICAL_DNS
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: service_pypi_org
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: pypi.org
+                port_value: 443
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        sni: pypi.org
   - name: ext-authz
     type: LOGICAL_DNS
     typed_extension_protocol_options:

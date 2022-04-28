@@ -23,7 +23,7 @@ func NewDataCollectionService(config *common_config.Config,
 
 func (svc *DataCollectionService) Start() {
 	registerSubscriber(svc.messagingService, sbomCollectorSubscription(svc.config))
-	registerSubscriber(svc.messagingService, vulnCollectorSubscription(svc.config))
+	registerSubscriber(svc.messagingService, vulnCollectorSubscription(svc.config, svc.vulnerabilityRepository))
 
 	waitForSubscribers()
 }

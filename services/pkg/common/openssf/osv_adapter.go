@@ -49,8 +49,14 @@ func NewOsvServiceAdapter(config OsvServiceAdapterConfig) *OsvServiceAdapter {
 	return &OsvServiceAdapter{config: config, client: client}
 }
 
-func (svc *OsvServiceAdapter) QueryPackage(ecosystem, name string) (V1VulnerabilityList, error) {
-	rQuery := &V1Query{}
+func (svc *OsvServiceAdapter) QueryPackage(ecosystem, name, version string) (V1VulnerabilityList, error) {
+	rQuery := &V1Query{
+		Package: &struct {
+			OsvPackage "yaml:\",inline\""
+		}{},
+	}
+
+	rQuery.Version = &version
 	rQuery.Package.Ecosystem = &ecosystem
 	rQuery.Package.Name = &name
 
@@ -72,6 +78,11 @@ func (svc *OsvServiceAdapter) QueryPackage(ecosystem, name string) (V1Vulnerabil
 	err = json.NewDecoder(resp.Body).Decode(&vulnList)
 	if err != nil {
 		return V1VulnerabilityList{}, fmt.Errorf("failed to decoded to vulnerability list: %v", err)
+	}
+
+	// No result found
+	if vulnList.Vulns == nil {
+		return V1VulnerabilityList{}, fmt.Errorf("empty vulnerability list from OSV")
 	}
 
 	return vulnList, nil

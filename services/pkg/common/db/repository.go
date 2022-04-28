@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db/adapters"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db/models"
+	"gorm.io/gorm"
 )
 
 type VulnerabilityRepository struct {
@@ -19,8 +20,22 @@ func (r *VulnerabilityRepository) Upsert(vulnerability models.Vulnerability) err
 		return err
 	}
 
-	tx := db.Create(&vulnerability)
-	return tx.Error
+	err = db.Transaction(func(tx *gorm.DB) error {
+		var records []models.Vulnerability
+		ntx := db.Where(&models.Vulnerability{
+			ExternalSource: vulnerability.ExternalSource,
+			ExternalId:     vulnerability.ExternalId,
+		}).Find(&records)
+
+		if ntx.Error == nil && len(records) > 0 && records[0].DataModifiedAt.Unix() < vulnerability.DataModifiedAt.Unix() {
+			vulnerability.ID = records[0].ID
+		}
+
+		ntx = db.Save(&vulnerability)
+		return ntx.Error
+	})
+
+	return err
 }
 
 func (r *VulnerabilityRepository) Lookup(ecosystem, group, name string) ([]models.Vulnerability, error) {

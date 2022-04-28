@@ -14,6 +14,18 @@ upstreams:
     tls: true
     sni: repo.maven.apache.org
     authentication: {}
+- name: pypi-org
+  type: pypi
+  authentication:
+    type: basic
+  route:
+    prefix: /pypi
+  repository:
+    host: pypi.org
+    port: 443
+    tls: true
+    sni: pypi.org
+    authentication: {}
 messaging:
   url: tls://nats-server:4222
 tap:

@@ -32,3 +32,7 @@ func (a Artefact) OpenSsfPackageName() string {
 
 	return ""
 }
+
+func (a Artefact) OpenSsfPackageVersion() string {
+	return a.Version
+}
