@@ -7,7 +7,7 @@ COPY go.sum .
 COPY Makefile .
 
 RUN go mod download
-RUN make oapi-codegen-install
+RUN make oapi-codegen-install protoc-install
 
 COPY . .
 

@@ -21,13 +21,13 @@ Policy Management:
   ☐ Enhance time based policy reload to use inotify/kqueue
 
 Data Collectors:
-  ☐ Implement vulnerability collection for artefacts
+  ✔ Implement vulnerability collection for artefacts @done(22-04-28 20:28)
   ☐ Implement license meta-data collection for artefacts
   ☐ Implement SBOM generator through TAP events
 
 Policy Data Service:
-  ☐ Finalise database technology to use
-  ☐ Finalise the database schema
+  ✔ Finalise database technology to use @done(22-04-28 20:28)
+  ✔ Finalise the database schema @done(22-04-28 20:28)
   ☐ Implement query API (gRPC)
 
 Admin Service:

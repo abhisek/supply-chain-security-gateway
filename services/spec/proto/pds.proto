@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/abhisek/supply-chain-gateway/services/gen";
+
+import "validate/validate.proto";
+import "models.proto";
+
+message FindVulnerabilityByArtefactRequest {
+  Artefact artefact = 1 [(validate.rules).message.required = true];
+}
+
+message VulnerabilityList {
+  repeated VulnerabilityMeta vulnerabilities = 1 [(validate.rules).repeated = { ignore_empty: true }];
+}
+
+message GetVulnerabilityByIdRequest {
+  string id = 1;
+}
+
+service PolicyDataService {
+  rpc FindVulnerabilitiesByArtefact(FindVulnerabilityByArtefactRequest) returns(VulnerabilityList) {}
+  rpc GetVulnerabilityDetails(GetVulnerabilityByIdRequest) returns (VulnerabilityDetail) {}
+}
