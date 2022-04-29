@@ -30,9 +30,17 @@ services:
     volumes:
       - ./config/global.yml:/config/global.yml
       - ./policies:/policies
+      - ./pki/pdp/server.crt:/config/pki/server.crt
+      - ./pki/pdp/server.key:/config/pki/server.key
+      - ./pki/root.crt:/config/pki/root.crt
     environment:
       GLOBAL_CONFIG_PATH: /config/global.yml
       PDP_POLICY_PATH: /policies
+      SERVICE_TLS_CERT: /config/pki/server.crt
+      SERVICE_TLS_KEY: /config/pki/server.key
+      SERVICE_TLS_ROOT_CA: /config/pki/root.crt
+      PDS_HOST: pds
+      PDS_PORT: 9002
   tap:
     build: ./services
     command: tap-server
@@ -79,6 +87,7 @@ services:
       - ./pki/root.crt:/config/pki/root.crt
     environment:
       GLOBAL_CONFIG_PATH: /config/global.yml
+      PDS_SERVER_NAME: pds
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt

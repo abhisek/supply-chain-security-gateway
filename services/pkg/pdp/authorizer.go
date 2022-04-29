@@ -8,8 +8,10 @@ import (
 	"os"
 	"strings"
 
+	pds_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	envoy_api_v3_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_service_auth_v3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 
@@ -23,17 +25,18 @@ var (
 )
 
 type authorizationService struct {
-	config       *common_config.Config
-	policyEngine *PolicyEngine
+	config            *common_config.Config
+	policyEngine      *PolicyEngine
+	policyDataService pds_api.PolicyDataServiceClient
 }
 
-func NewAuthorizationService(config *common_config.Config) (envoy_service_auth_v3.AuthorizationServer, error) {
+func NewAuthorizationService(config *common_config.Config, p pds_api.PolicyDataServiceClient) (envoy_service_auth_v3.AuthorizationServer, error) {
 	engine, err := NewPolicyEngine(os.Getenv("PDP_POLICY_PATH"), true)
 	if err != nil {
 		return &authorizationService{}, err
 	}
 
-	return &authorizationService{config: config, policyEngine: engine}, nil
+	return &authorizationService{config: config, policyEngine: engine, policyDataService: p}, nil
 }
 
 func (s *authorizationService) Check(ctx context.Context,
@@ -51,6 +54,21 @@ func (s *authorizationService) Check(ctx context.Context,
 	if err != nil {
 		log.Printf("Error resolving userId: %v", err)
 		return &envoy_service_auth_v3.CheckResponse{}, err
+	}
+
+	resp, err := s.policyDataService.FindVulnerabilitiesByArtefact(context.Background(), &pds_api.FindVulnerabilityByArtefactRequest{
+		Artefact: &pds_api.Artefact{
+			Ecosystem: upstreamArtefact.OpenSsfEcosystem(),
+			Group:     upstreamArtefact.Group,
+			Name:      upstreamArtefact.Name,
+			Version:   upstreamArtefact.Version,
+		},
+	})
+
+	if err != nil {
+		log.Printf("Failed to enrich artefact with vulnerability information: %v", err)
+	} else {
+		log.Printf("Enriched artefact with vulnerabilities: %s", utils.Introspect(resp.Vulnerabilities))
 	}
 
 	log.Printf("Authorizing upstream req from %s: [%s/%s/%s/%s][%s] %s",

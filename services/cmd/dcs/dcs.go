@@ -44,7 +44,7 @@ func main() {
 		log.Fatalf("Failed to run MySQL migration: %v", err)
 	}
 
-	repository, err := db.NewVulnerabilityRepository(mysqlAdapter)
+	repository, err := db.NewVulnerabilityRepository(config, mysqlAdapter)
 	if err != nil {
 		log.Fatalf("Failed to create vulnerability repository")
 	}

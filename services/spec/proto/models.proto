@@ -21,6 +21,20 @@ enum VulnerabilitySeverity {
   INFO      = 40;
 }
 
+enum SbomFormat {
+  SPDX = 0;
+  CYCLONEDX = 1;
+}
+
+enum LicenseIdentifier {
+  UNKNOWN = 0;
+}
+
+message Sbom {
+  SbomFormat type = 1;
+  LicenseIdentifier licenseId = 2;
+}
+
 message VulnerabilityScore {
   string type = 1;
   string value = 2;

@@ -37,3 +37,8 @@ pdp:
   publisher:
     topics:
       policy_denied: com.msg.event.pdp.policy_denied
+dcs:
+  publisher:
+    topics:
+      vulnerability: com.msg.event.dcs.vulnerability
+      sbom: com.msg.event.dcs.sbom

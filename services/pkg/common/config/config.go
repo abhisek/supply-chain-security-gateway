@@ -24,11 +24,16 @@ type PdpServiceConfig struct {
 	Publisher EventPublisherConfig `yaml:"publisher"`
 }
 
+type DcsServiceConfig struct {
+	Publisher EventPublisherConfig `yaml:"publisher"`
+}
+
 type GlobalConfig struct {
 	Upstreams  []models.ArtefactUpStream `yaml:"upstreams"`
 	Messaging  MessagingConfig           `yaml:"messaging"`
 	TapService TapServiceConfig          `yaml:"tap"`
 	PdpService PdpServiceConfig          `yaml:"pdp"`
+	DcsService DcsServiceConfig          `yaml:"dcs"`
 }
 
 type Config struct {

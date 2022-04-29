@@ -39,7 +39,7 @@ func main() {
 		log.Fatalf("Failed to initialize MySQL adapter: %v", err)
 	}
 
-	repository, err := db.NewVulnerabilityRepository(mysqlAdapter)
+	repository, err := db.NewVulnerabilityRepository(config, mysqlAdapter)
 	if err != nil {
 		log.Fatalf("Failed to create vulnerability repository")
 	}
@@ -49,7 +49,7 @@ func main() {
 		log.Fatalf("Failed to create policy data service")
 	}
 
-	common_adapters.StartGrpcServer("PDS", "0.0.0.0", "9002",
+	common_adapters.StartGrpcMtlsServer("PDS", os.Getenv("PDS_SERVER_NAME"), "0.0.0.0", "9002",
 		[]grpc.ServerOption{grpc.MaxConcurrentStreams(5000),
 			common_adapters.GrpcStreamValidatorInterceptor(),
 			common_adapters.GrpcUnaryValidatorInterceptor()}, func(s *grpc.Server) {

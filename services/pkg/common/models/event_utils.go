@@ -1,6 +1,8 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 func (m MetaEventWithAttributes) Serialize() ([]byte, error) {
 	bytes, err := json.Marshal(m)

@@ -3,14 +3,18 @@ package adapters
 import (
 	"log"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 )
 
 type GrpcAdapterConfigurer func(server *grpc.Server)
+type GrpcClientConfigurer func(conn *grpc.ClientConn)
 
 func GrpcStreamValidatorInterceptor() grpc.ServerOption {
 	return grpc.StreamInterceptor(
@@ -28,6 +32,18 @@ func GrpcUnaryValidatorInterceptor() grpc.ServerOption {
 	)
 }
 
+func StartGrpcMtlsServer(name, serverName, host, port string, sopts []grpc.ServerOption, configure GrpcAdapterConfigurer) {
+	tc, err := utils.TlsConfigFromEnvironment(serverName)
+	if err != nil {
+		log.Fatalf("Failed to setup TLS from environment: %v", err)
+	}
+
+	creds := credentials.NewTLS(&tc)
+	sopts = append(sopts, grpc.Creds(creds))
+
+	StartGrpcServer(name, host, port, sopts, configure)
+}
+
 func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configure GrpcAdapterConfigurer) {
 	addr := net.JoinHostPort(host, port)
 	listener, err := net.Listen("tcp", addr)
@@ -43,4 +59,46 @@ func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configu
 	err = server.Serve(listener)
 
 	log.Fatalf("gRPC Server exit: %s", err.Error())
+}
+
+func GrpcMtlsClient(name, serverName, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
+	tc, err := GrpcTransportCredentials(serverName)
+	if err != nil {
+		return nil, err
+	}
+
+	dopts = append(dopts, tc)
+	return GrpcClient(name, host, port, dopts, configurer)
+}
+
+func GrpcClient(name, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
+	log.Printf("[%s] Connecting to gRPC server %s:%s", name, host, port)
+
+	retry := 5
+	t := 1
+	conn, err := grpc.Dial(net.JoinHostPort(host, port), dopts...)
+	for err != nil && t < retry {
+		log.Printf("[%d/%d] Retrying due to failure: %v", t, retry, err)
+		conn, err = grpc.Dial(net.JoinHostPort(host, port), dopts...)
+
+		time.Sleep(1 * time.Second)
+		t += 1
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	configurer(conn)
+	return conn, nil
+}
+
+func GrpcTransportCredentials(serverName string) (grpc.DialOption, error) {
+	tlsConfig, err := utils.TlsConfigFromEnvironment(serverName)
+	if err != nil {
+		return nil, err
+	}
+
+	creds := credentials.NewTLS(&tlsConfig)
+	return grpc.WithTransportCredentials(creds), nil
 }
