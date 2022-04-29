@@ -8,7 +8,7 @@ openssl req -nodes -new -x509 \
   -keyout pki/root.key -out pki/root.crt \
   -subj $ROOT_SUBJ
 
-export PARTICIPATING_SERVICES="pdp tap dcs nats-server"
+export PARTICIPATING_SERVICES="pdp tap dcs pds nats-server"
 
 for svc in $PARTICIPATING_SERVICES; do
   mkdir -p pki/$svc
@@ -40,11 +40,13 @@ done
 
 find ./pki -type f -exec chmod 644 {} \;
 
+if [ ! -f ".env" ]; then
 # Generate secrets
-mysql_root_pass=$(openssl rand -hex 32)
-cat > .env <<_EOF
-MYSQL_ROOT_PASSWORD=$mysql_root_pass
-MYSQL_DCS_DATABASE=vdb
-MYSQL_DCS_USER=root
-MYSQL_DCS_PASSWORD=$mysql_root_pass
+  mysql_root_pass=$(openssl rand -hex 32)
+  cat > .env <<_EOF
+  MYSQL_ROOT_PASSWORD=$mysql_root_pass
+  MYSQL_DCS_DATABASE=vdb
+  MYSQL_DCS_USER=root
+  MYSQL_DCS_PASSWORD=$mysql_root_pass
 _EOF
+fi

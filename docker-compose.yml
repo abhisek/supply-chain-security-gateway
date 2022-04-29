@@ -66,5 +66,26 @@ services:
       MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
       MYSQL_USER: ${MYSQL_DCS_USER}
       MYSQL_PASSWORD: ${MYSQL_DCS_PASSWORD}
+  pds:
+    depends_on:
+      - mysql-server
+      - dcs
+    build: ./services
+    command: pds-server
+    volumes:
+      - ./config/global.yml:/config/global.yml
+      - ./pki/pds/server.crt:/config/pki/server.crt
+      - ./pki/pds/server.key:/config/pki/server.key
+      - ./pki/root.crt:/config/pki/root.crt
+    environment:
+      GLOBAL_CONFIG_PATH: /config/global.yml
+      SERVICE_TLS_CERT: /config/pki/server.crt
+      SERVICE_TLS_KEY: /config/pki/server.key
+      SERVICE_TLS_ROOT_CA: /config/pki/root.crt
+      MYSQL_SERVER_HOST: mysql-server
+      MYSQL_SERVER_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
+      MYSQL_USER: ${MYSQL_DCS_USER}
+      MYSQL_PASSWORD: ${MYSQL_DCS_PASSWORD}
 volumes:
   mysql-db: {}

@@ -5,9 +5,28 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 )
 
 type GrpcAdapterConfigurer func(server *grpc.Server)
+
+func GrpcStreamValidatorInterceptor() grpc.ServerOption {
+	return grpc.StreamInterceptor(
+		grpc_middleware.ChainStreamServer(
+			grpc_validator.StreamServerInterceptor(),
+		),
+	)
+}
+
+func GrpcUnaryValidatorInterceptor() grpc.ServerOption {
+	return grpc.UnaryInterceptor(
+		grpc_middleware.ChainUnaryServer(
+			grpc_validator.UnaryServerInterceptor(),
+		),
+	)
+}
 
 func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configure GrpcAdapterConfigurer) {
 	addr := net.JoinHostPort(host, port)

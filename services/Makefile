@@ -23,13 +23,22 @@ protoc-codegen:
 		--validate_opt=paths=source_relative \
 		./spec/proto/pds.proto
 
+	protoc -I ./spec/proto/ \
+		-I ./spec/proto/lib/ -I ./spec/proto/lib/protoc-gen-validate \
+		--go_out=./gen/ \
+		--validate_out="lang=go:./gen/" \
+		--go_opt=paths=source_relative \
+		--validate_opt=paths=source_relative \
+		./spec/proto/models.proto
+
 setup:
 	mkdir -p out
 
-server: oapi-codegen
+server: oapi-codegen protoc-codegen
 	go build -o out/pdp-server cmd/pdp/pdp.go
 	go build -o out/tap-server cmd/tap/tap.go
 	go build -o out/dcs-server cmd/dcs/dcs.go
+	go build -o out/pds-server cmd/pds/pds.go
 
 .PHONY: test
 test:

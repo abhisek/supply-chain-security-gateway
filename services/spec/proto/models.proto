@@ -5,13 +5,12 @@ package proto;
 option go_package = "github.com/abhisek/supply-chain-gateway/services/gen";
 
 import "validate/validate.proto";
-import "google/api/annotations.proto";
 
 message Artefact {
-  string ecosystem  = 1 [(validate.rules).message.required = true];
-  string group      = 2 [(validate.rules).message.required = true];
-  string name       = 3 [(validate.rules).message.required = true];
-  string version    = 4 [(validate.rules).message.required = true];
+  string ecosystem  = 1;
+  string group      = 2;
+  string name       = 3;
+  string version    = 4;
 }
 
 enum VulnerabilitySeverity {
@@ -22,10 +21,16 @@ enum VulnerabilitySeverity {
   INFO      = 40;
 }
 
+message VulnerabilityScore {
+  string type = 1;
+  string value = 2;
+}
+
 message VulnerabilityMeta {
   string id = 1;
   string source = 2;
   VulnerabilitySeverity severity = 3;
+  VulnerabilityScore score = 4 [(validate.rules).message.required = true];
 }
 
 message VulnerabilityDetail {

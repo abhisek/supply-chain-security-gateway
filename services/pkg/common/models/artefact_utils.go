@@ -36,7 +36,7 @@ func (a Artefact) OpenSsfPackageName() string {
 		return fmt.Sprintf("%s:%s", a.Group, a.Name)
 	}
 
-	return ""
+	return a.Name
 }
 
 func (a Artefact) OpenSsfPackageVersion() string {

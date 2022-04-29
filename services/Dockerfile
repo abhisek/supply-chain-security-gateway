@@ -1,10 +1,10 @@
 FROM golang:1.18-buster AS build
 
+RUN apt-get update && apt-get install -y protobuf-compiler
+
 WORKDIR /build
 
-COPY go.mod .
-COPY go.sum .
-COPY Makefile .
+COPY go.mod go.sum Makefile ./
 
 RUN go mod download
 RUN make oapi-codegen-install protoc-install
@@ -21,6 +21,6 @@ WORKDIR /app
 COPY --from=build /build/out /app/server
 
 ENV PATH "${PATH}:/app/server"
-EXPOSE 9000 9001
+EXPOSE 9000 9001 9002
 
 USER nonroot:nonroot

@@ -20,6 +20,17 @@ message GetVulnerabilityByIdRequest {
 }
 
 service PolicyDataService {
+  /*
+    Find applicable vulerabilties by an Artefact meta information. Ecosystem, Group, Name is used
+    as composite lookup key for retrieving all vulnerabilities for a given artefact from the DB.
+    Subsequently perform an in-memory fuzzy match to select all the vulnerabilities matching the
+    requested artefact version.
+  */
   rpc FindVulnerabilitiesByArtefact(FindVulnerabilityByArtefactRequest) returns(VulnerabilityList) {}
+
+  /*
+    Get all details of the vulnerabilty available in the data source. Primarily meant for frontend
+    requirement or for reporting purpose.
+  */
   rpc GetVulnerabilityDetails(GetVulnerabilityByIdRequest) returns (VulnerabilityDetail) {}
 }

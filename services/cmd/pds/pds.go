@@ -5,9 +5,15 @@ import (
 	"os"
 	"strconv"
 
+	api "github.com/abhisek/supply-chain-gateway/services/gen"
+
+	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"google.golang.org/grpc"
+
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db/adapters"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/pds"
 )
 
 func main() {
@@ -38,5 +44,15 @@ func main() {
 		log.Fatalf("Failed to create vulnerability repository")
 	}
 
-	log.Printf("All up: %+v %+v", config, repository)
+	pdService, err := pds.NewPolicyDataService(config, repository)
+	if err != nil {
+		log.Fatalf("Failed to create policy data service")
+	}
+
+	common_adapters.StartGrpcServer("PDS", "0.0.0.0", "9002",
+		[]grpc.ServerOption{grpc.MaxConcurrentStreams(5000),
+			common_adapters.GrpcStreamValidatorInterceptor(),
+			common_adapters.GrpcUnaryValidatorInterceptor()}, func(s *grpc.Server) {
+			api.RegisterPolicyDataServiceServer(s, pdService)
+		})
 }
