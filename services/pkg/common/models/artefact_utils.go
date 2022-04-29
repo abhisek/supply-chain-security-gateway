@@ -20,6 +20,12 @@ func NewArtefact(src ArtefactSource, name, group, version string) Artefact {
 func (a Artefact) OpenSsfEcosystem() string {
 	if a.Source.Type == ArtefactSourceTypeMaven2 {
 		return openssf.VulnerabilityEcosystemMaven
+	} else if a.Source.Type == ArtefactSourceTypePypi {
+		return openssf.VulnerabilityEcosystemPypi
+	} else if a.Source.Type == ArtefactSourceTypeNpm {
+		return openssf.VulnerabilityEcosystemNpm
+	} else if a.Source.Type == ArtefactSourceTypeRubyGems {
+		return openssf.VulnerabilityEcosystemRubyGems
 	}
 
 	return ""

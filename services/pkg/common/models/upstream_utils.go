@@ -10,6 +10,7 @@ import (
 var (
 	errIncorrectPrefix           = errors.New("incorrect path prefix")
 	errIncorrectMaven2Path       = errors.New("incorrect maven2 path")
+	errIncorrectPypiPath         = errors.New("incorrect pypi path")
 	errUnimplementedUpstreamType = errors.New("path resolver for upstream type is not implemented")
 )
 
@@ -46,7 +47,7 @@ func (s ArtefactUpStream) MatchPath(path string) bool {
 	return strings.HasPrefix(path, s.RoutingRule.Prefix)
 }
 
-// Resolve an HTTP request path for this artefact into an Arteface model
+// Resolve an HTTP request path for this artefact into an Artefact model
 func (s ArtefactUpStream) Path2Artefact(path string) (Artefact, error) {
 	path = filepath.Clean(path)
 	if !strings.HasPrefix(path, s.RoutingRule.Prefix) {
@@ -62,9 +63,31 @@ func (s ArtefactUpStream) Path2Artefact(path string) (Artefact, error) {
 	switch s.Type {
 	case ArtefactSourceTypeMaven2:
 		return artefactForMaven2(parts)
+	case ArtefactSourceTypePypi:
+		return artefactForPypi(parts)
 	default:
 		return Artefact{}, errUnimplementedUpstreamType
 	}
+}
+
+func artefactForPypi(parts []string) (Artefact, error) {
+	if len(parts) == 0 {
+		return Artefact{}, errIncorrectPypiPath
+	}
+
+	if parts[0] == "simple" {
+		parts = parts[1:]
+	}
+
+	name := parts[0]
+	version := ""
+
+	if len(parts) > 1 {
+		version = parts[1]
+	}
+
+	return NewArtefact(ArtefactSource{Type: ArtefactSourceTypePypi},
+		name, "", version), nil
 }
 
 func artefactForMaven2(parts []string) (Artefact, error) {

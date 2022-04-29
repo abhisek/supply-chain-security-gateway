@@ -17,7 +17,7 @@ upstreams:
 - name: pypi-org
   type: pypi
   authentication:
-    type: basic
+    type: noauth
   route:
     prefix: /pypi
   repository:

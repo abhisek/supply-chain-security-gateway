@@ -2,7 +2,6 @@ package pdp
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log"
 	"os"
@@ -36,8 +35,6 @@ func NewPolicyEngine(path string, changeMonitor bool) (*PolicyEngine, error) {
 }
 
 func (svc *PolicyEngine) Evaluate(input PolicyInput) (PolicyResponse, error) {
-	log.Printf("Evaluating policy input: %s", utils.Introspect(input))
-
 	svc.lock.Lock()
 	defer svc.lock.Unlock()
 
@@ -50,16 +47,9 @@ func (svc *PolicyEngine) Evaluate(input PolicyInput) (PolicyResponse, error) {
 		return PolicyResponse{}, errors.New("Policy evaluation returned unexpected result")
 	}
 
-	// TODO: Reflect x into p instead of using json hack
-
 	x := rs[0].Bindings["x"]
-	m, err := json.Marshal(x)
-	if err != nil {
-		return PolicyResponse{}, err
-	}
-
 	var p PolicyResponse
-	err = json.Unmarshal(m, &p)
+	err = utils.MapStruct(x, &p)
 	if err != nil {
 		return PolicyResponse{}, err
 	}
