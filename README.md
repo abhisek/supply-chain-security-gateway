@@ -16,6 +16,12 @@ A reference architecture and proof of concept implementation of a supply chain s
 
 ## TL;DR
 
+Ensure git submodules are updated locally
+
+```bash
+git submodule update --init --recursive
+```
+
 Initialize keys and certificates for mTLS
 
 ```bash

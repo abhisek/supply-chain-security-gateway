@@ -6,7 +6,7 @@ WORKDIR /build
 
 COPY go.mod go.sum Makefile ./
 
-RUN go mod download
+RUN go mod download && mkdir gen
 RUN make oapi-codegen-install protoc-install
 
 COPY . .
