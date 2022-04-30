@@ -38,7 +38,7 @@ func (svc *PolicyEngine) Evaluate(input PolicyInput) (PolicyResponse, error) {
 	svc.lock.Lock()
 	defer svc.lock.Unlock()
 
-	log.Printf("PolicyInput: %v", input)
+	log.Printf("PolicyInput: %s", utils.Introspect(input))
 
 	rs, err := svc.query.Eval(context.Background(), rego.EvalInput(input))
 	if err != nil {

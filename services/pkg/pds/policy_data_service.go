@@ -8,6 +8,7 @@ import (
 	api "github.com/abhisek/supply-chain-gateway/services/gen"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -60,6 +61,7 @@ func (s *policyDataServer) FindVulnerabilitiesByArtefact(ctx context.Context,
 		}
 	}
 
+	log.Printf("Supplying vulnerabilities: %s", utils.Introspect(vulnList))
 	return vulnList, nil
 }
 

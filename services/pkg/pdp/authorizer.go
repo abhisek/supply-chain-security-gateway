@@ -76,7 +76,7 @@ func (s *authorizationService) Check(ctx context.Context,
 			upstreamArtefact.Group, upstreamArtefact.Name, upstreamArtefact.Version,
 			utils.Introspect(resp.Vulnerabilities))
 
-		s.mapVulnerabilities(&vulnerabilities, resp.Vulnerabilities)
+		vulnerabilities = s.mapVulnerabilities(resp.Vulnerabilities)
 	}
 
 	log.Printf("Authorizing upstream req from %s: [%s/%s/%s/%s][%s] %s",
@@ -167,11 +167,12 @@ func (s *authorizationService) authenticateForUpstream(upstream common_models.Ar
 	return pair[0], nil
 }
 
-func (s *authorizationService) mapVulnerabilities(target *[]common_models.ArtefactVulnerability,
-	src []*pds_api.VulnerabilityMeta) {
+// Convert pds_api.VulnerabilityMeta to common_models.ArtefactVulnerability
+func (s *authorizationService) mapVulnerabilities(src []*pds_api.VulnerabilityMeta) []common_models.ArtefactVulnerability {
+	target := []common_models.ArtefactVulnerability{}
 
 	if src == nil || len(src) == 0 {
-		return
+		return target
 	}
 
 	for _, s := range src {
@@ -207,6 +208,8 @@ func (s *authorizationService) mapVulnerabilities(target *[]common_models.Artefa
 			})
 		}
 
-		*target = append(*target, mv)
+		target = append(target, mv)
 	}
+
+	return target
 }

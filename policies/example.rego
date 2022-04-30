@@ -1,16 +1,6 @@
 package pdp
 
-# Input format
-# {"kind":"PolicyInput","version":{"major":1,"minor":0,"patch":0},
-# "target":{"artefact":{"source":{"type":"maven2"},
-# "group":"com.google.j2objc",
-# "name":"j2objc-annotations",
-# "version":"1.3",
-# "vulnerabilities":[],"licenses":[]}}}
-
 default allow = false
-
-unacceptableVulnerabilitySeverities := ["CRITICAL", "HIGH"]
 
 allow {
   count(violations) == 0
@@ -43,9 +33,9 @@ violations[{"message": msg, "code": code}] {
   some i, j
 
   input.target.vulnerabilities[i].severity =
-    unacceptableVulnerabilitySeverities[j]
+    data.UNACCEPTABLE_VULNERABILITIES[j]
 
   msg := sprintf("Vulnerabilities with %v severity blocked",
-    [unacceptableVulnerabilitySeverities])
+    [data.UNACCEPTABLE_VULNERABILITIES])
   code := 1003
 }
