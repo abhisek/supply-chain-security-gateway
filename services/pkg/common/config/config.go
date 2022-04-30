@@ -21,7 +21,8 @@ type TapServiceConfig struct {
 }
 
 type PdpServiceConfig struct {
-	Publisher EventPublisherConfig `yaml:"publisher"`
+	MonitorMode bool                 `yaml:"monitor_mode"`
+	Publisher   EventPublisherConfig `yaml:"publisher"`
 }
 
 type DcsServiceConfig struct {

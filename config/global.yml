@@ -34,6 +34,7 @@ tap:
       upstream_request: com.msg.event.upstream.request
       upstream_response: com.msg.event.upstream.response
 pdp:
+  monitor_mode: false
   publisher:
     topics:
       policy_denied: com.msg.event.pdp.policy_denied

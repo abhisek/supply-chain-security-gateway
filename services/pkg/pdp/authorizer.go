@@ -92,7 +92,7 @@ func (s *authorizationService) Check(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	if !policyRespose.Allowed() {
+	if !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed() {
 		log.Printf("Policy denied upstream request")
 		return &envoy_service_auth_v3.CheckResponse{}, errPolicyDeniedUpStreamRequest
 	}
