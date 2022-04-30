@@ -81,7 +81,6 @@ func (svc *PolicyEngine) Load(changeMonitor bool) error {
 				select {
 				case <-ticker.C:
 					log.Printf("Re-loading policy from path: %s", svc.repository)
-
 					err := svc.loadPolicy()
 					if err != nil {
 						log.Printf("Failed to reload policy: %s", err.Error())

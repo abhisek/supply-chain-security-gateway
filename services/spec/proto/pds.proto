@@ -15,6 +15,10 @@ message VulnerabilityList {
   repeated VulnerabilityMeta vulnerabilities = 1 [(validate.rules).repeated = { ignore_empty: true }];
 }
 
+message EnrichedArtefact {
+
+}
+
 message GetVulnerabilityByIdRequest {
   string id = 1;
 }

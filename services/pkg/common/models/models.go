@@ -10,6 +10,12 @@ const (
 
 	ArtefactLicenseTypeSpdx      = "spdx"
 	ArtefactLicenseTypeCycloneDx = "cyclonedx"
+
+	ArtefactVulnerabilitySeverityCritical = "CRITICAL"
+	ArtefactVulnerabilitySeverityHigh     = "HIGH"
+	ArtefactVulnerabilitySeverityMedium   = "MEDIUM"
+	ArtefactVulnerabilitySeverityLow      = "LOW"
+	ArtefactVulnerabilitySeverityInfo     = "INFO"
 )
 
 type ArtefactRepositoryAuthentication struct {
@@ -47,9 +53,8 @@ type ArtefactSource struct {
 
 // Align with CVSS v3 but keep room
 type ArtefactVulnerabilityScore struct {
-	Type     string `json:"type"`
-	Value    string `json:"value"`
-	Severity string `json:"severity"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }
 
 // Align with CVE but keep room for enhancement
@@ -59,9 +64,10 @@ type ArtefactVulnerabilityId struct {
 }
 
 type ArtefactVulnerability struct {
-	Name  string                     `json:"name"`
-	Id    ArtefactVulnerabilityId    `json:"id"`
-	Score ArtefactVulnerabilityScore `json:"score"`
+	Name     string                       `json:"name"`
+	Id       ArtefactVulnerabilityId      `json:"id"`
+	Severity string                       `json:"severity"`
+	Scores   []ArtefactVulnerabilityScore `json:"scores"`
 }
 
 // Align with SPDX / CycloneDX

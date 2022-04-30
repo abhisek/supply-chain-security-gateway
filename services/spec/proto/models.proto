@@ -14,11 +14,12 @@ message Artefact {
 }
 
 enum VulnerabilitySeverity {
-  CRITICAL  = 0;
-  HIGH      = 10;
-  MEDIUM    = 20;
-  LOW       = 30;
-  INFO      = 40;
+  UNKNOWN_SEVERITY    = 0;
+  CRITICAL            = 10;
+  HIGH                = 20;
+  MEDIUM              = 30;
+  LOW                 = 40;
+  INFO                = 50;
 }
 
 enum SbomFormat {
@@ -27,7 +28,7 @@ enum SbomFormat {
 }
 
 enum LicenseIdentifier {
-  UNKNOWN = 0;
+  UNKNOWN_LICENSE_ID = 0;
 }
 
 message Sbom {
@@ -40,11 +41,17 @@ message VulnerabilityScore {
   string value = 2;
 }
 
+message VulnerabilityReference {
+  string type = 1;
+  string url = 2;
+}
+
 message VulnerabilityMeta {
   string id = 1;
   string source = 2;
-  VulnerabilitySeverity severity = 3;
-  VulnerabilityScore score = 4 [(validate.rules).message.required = true];
+  string title = 3;
+  VulnerabilitySeverity severity = 4;
+  repeated VulnerabilityScore scores = 5;
 }
 
 message VulnerabilityDetail {

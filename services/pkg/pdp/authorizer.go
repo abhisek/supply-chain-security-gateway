@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	pds_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
@@ -56,7 +57,9 @@ func (s *authorizationService) Check(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	resp, err := s.policyDataService.FindVulnerabilitiesByArtefact(context.Background(), &pds_api.FindVulnerabilityByArtefactRequest{
+	nctx, ncancel := context.WithTimeout(ctx, 2*time.Second)
+	defer ncancel()
+	resp, err := s.policyDataService.FindVulnerabilitiesByArtefact(nctx, &pds_api.FindVulnerabilityByArtefactRequest{
 		Artefact: &pds_api.Artefact{
 			Ecosystem: upstreamArtefact.OpenSsfEcosystem(),
 			Group:     upstreamArtefact.Group,
@@ -65,10 +68,15 @@ func (s *authorizationService) Check(ctx context.Context,
 		},
 	})
 
+	var vulnerabilities []common_models.ArtefactVulnerability
 	if err != nil {
 		log.Printf("Failed to enrich artefact with vulnerability information: %v", err)
 	} else {
-		log.Printf("Enriched artefact with vulnerabilities: %s", utils.Introspect(resp.Vulnerabilities))
+		log.Printf("Enriched artefact (%s/%s/%s) with vulnerabilities: %s",
+			upstreamArtefact.Group, upstreamArtefact.Name, upstreamArtefact.Version,
+			utils.Introspect(resp.Vulnerabilities))
+
+		s.mapVulnerabilities(&vulnerabilities, resp.Vulnerabilities)
 	}
 
 	log.Printf("Authorizing upstream req from %s: [%s/%s/%s/%s][%s] %s",
@@ -78,7 +86,7 @@ func (s *authorizationService) Check(ctx context.Context,
 		upstreamArtefact.Name, upstreamArtefact.Version,
 		httpReq.Method, httpReq.Path)
 
-	policyRespose, err := s.policyEngine.Evaluate(NewPolicyInputWithArtefact(upstreamArtefact, upstream))
+	policyRespose, err := s.policyEngine.Evaluate(NewPolicyInput(upstreamArtefact, upstream, vulnerabilities))
 	if err != nil {
 		log.Printf("Failed to evaluate policy: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
@@ -157,4 +165,48 @@ func (s *authorizationService) authenticateForUpstream(upstream common_models.Ar
 	}
 
 	return pair[0], nil
+}
+
+func (s *authorizationService) mapVulnerabilities(target *[]common_models.ArtefactVulnerability,
+	src []*pds_api.VulnerabilityMeta) {
+
+	if src == nil || len(src) == 0 {
+		return
+	}
+
+	for _, s := range src {
+		mv := common_models.ArtefactVulnerability{
+			Name: s.Title,
+			Id: common_models.ArtefactVulnerabilityId{
+				Source: s.Source,
+				Id:     s.Id,
+			},
+			Scores: []common_models.ArtefactVulnerabilityScore{},
+		}
+
+		switch s.Severity {
+		case pds_api.VulnerabilitySeverity_CRITICAL:
+			mv.Severity = common_models.ArtefactVulnerabilitySeverityCritical
+			break
+		case pds_api.VulnerabilitySeverity_HIGH:
+			mv.Severity = common_models.ArtefactVulnerabilitySeverityHigh
+			break
+		case pds_api.VulnerabilitySeverity_MEDIUM:
+			mv.Severity = common_models.ArtefactVulnerabilitySeverityMedium
+			break
+		case pds_api.VulnerabilitySeverity_LOW:
+			mv.Severity = common_models.ArtefactVulnerabilitySeverityLow
+		default:
+			mv.Severity = common_models.ArtefactVulnerabilitySeverityInfo
+		}
+
+		for _, score := range s.Scores {
+			mv.Scores = append(mv.Scores, common_models.ArtefactVulnerabilityScore{
+				Type:  score.Type,
+				Value: score.Value,
+			})
+		}
+
+		*target = append(*target, mv)
+	}
 }

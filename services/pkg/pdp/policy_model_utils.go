@@ -2,7 +2,9 @@ package pdp
 
 import common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 
-func NewPolicyInputWithArtefact(target common_models.Artefact, upstream common_models.ArtefactUpStream) PolicyInput {
+func NewPolicyInput(target common_models.Artefact,
+	upstream common_models.ArtefactUpStream,
+	vulnerabilities []common_models.ArtefactVulnerability) PolicyInput {
 	return PolicyInput{
 		Kind: policyInputKind,
 		Version: PolicyInputVersion{
@@ -11,8 +13,9 @@ func NewPolicyInputWithArtefact(target common_models.Artefact, upstream common_m
 			Patch: policyInputPatchVersion,
 		},
 		Target: PolicyInputTarget{
-			Artefact: PolicyEvalTargetArtefact{target},
-			Upstream: PolicyEvalTargetUpstream{upstream},
+			Artefact:        PolicyEvalTargetArtefact{target},
+			Upstream:        PolicyEvalTargetUpstream{upstream},
+			Vulnerabilities: []PolicyEvalTargetVulnerability{vulnerabilities...},
 		},
 	}
 }
