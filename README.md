@@ -30,6 +30,13 @@ sh bootstrap.sh
 
 > This will generate root certificate, per service certificates in `pki/`.
 
+[TLS SAN](https://en.wikipedia.org/wiki/Subject_Alternative_Name) must be correctly set in the generated certificate for the mTLS to work correctly. Verify using:
+
+```bash
+openssl x509 -noout -text \
+  -in ./pki/nats-server/server.crt | grep "DNS:nats-server"
+```
+
 Start the services using `docker-compose`
 
 ```bash
