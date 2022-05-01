@@ -28,6 +28,13 @@ static_resources:
                   host_rewrite_literal: repo.maven.apache.org
                   cluster: service_maven_central
               - match:
+                  prefix: "/gradle-plugins/m2"
+                route:
+                  timeout: 0s
+                  host_rewrite_literal: plugins.gradle.org
+                  prefix_rewrite: /m2
+                  cluster: service_gradle_plugins
+              - match:
                   prefix: "/pypi"
                 route:
                   timeout: 0s
@@ -84,6 +91,23 @@ static_resources:
       typed_config:
         "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
         sni: repo.maven.apache.org
+  - name: service_gradle_plugins
+    type: LOGICAL_DNS
+    dns_lookup_family: V4_ONLY
+    load_assignment:
+      cluster_name: service_gradle_plugins
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: plugins.gradle.org
+                port_value: 443
+    transport_socket:
+      name: envoy.transport_sockets.tls
+      typed_config:
+        "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+        sni: plugins.gradle.org
   - name: service_pypi_org
     type: LOGICAL_DNS
     dns_lookup_family: V4_ONLY

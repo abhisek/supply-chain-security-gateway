@@ -7,5 +7,43 @@
  * in the user manual at https://docs.gradle.org/7.3.3/userguide/multi_project_builds.html
  */
 
+pluginManagement {
+  repositories {
+    maven {
+      url "http://localhost:10000/gradle-plugins/m2"
+      allowInsecureProtocol true
+
+      // Credentials are not verified currently but we want to
+      // support multiple pluggable IDPs for easy integration with
+      // various CI
+      credentials {
+        authentication {
+            basic(BasicAuthentication)
+        }
+
+        username "github.com/octocat/hello-world"
+        password "GithubOidcToken"
+      }
+    }
+
+    maven {
+      url "http://localhost:10000/maven2"
+      allowInsecureProtocol true
+
+      // Credentials are not verified currently but we want to
+      // support multiple pluggable IDPs for easy integration with
+      // various CI
+      credentials {
+        authentication {
+            basic(BasicAuthentication)
+        }
+
+        username "github.com/octocat/hello-world"
+        password "GithubOidcToken"
+      }
+    }
+  }
+}
+
 rootProject.name = 'demo-client'
 include('app')

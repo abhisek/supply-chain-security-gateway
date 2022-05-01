@@ -14,6 +14,17 @@ upstreams:
     tls: true
     sni: repo.maven.apache.org
     authentication: {}
+- name: gradle-plugins
+  type: maven2
+  authentication:
+    type: noauth
+  route:
+    prefix: /gradle-plugins/m2
+  repository:
+    host: plugins.gradle.org
+    port: 443
+    tls: true
+    sni: plugins.gradle.org
 - name: pypi-org
   type: pypi
   authentication:
