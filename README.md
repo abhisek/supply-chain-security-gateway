@@ -1,6 +1,6 @@
 # Supply Chain Security Gateway
 
-A reference architecture and <u>proof of concept implementation</u> of a supply chain security gateway with the goal of enforcing sane security policies to an organization's consumption of 3rd party software (dependencies) in its own products.
+A reference architecture and **<ins>proof of concept implementation</ins>** of a supply chain security gateway with the goal of enforcing sane security policies to an organization's consumption of 3rd party software (dependencies) in its own products.
 
 - [Supply Chain Security Gateway](#supply-chain-security-gateway)
   - [TL;DR](#tldr)
