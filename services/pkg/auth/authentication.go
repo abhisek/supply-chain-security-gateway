@@ -9,6 +9,10 @@ package auth
 	User tricking gateway to send credentials to malicious user controlled endpoint
 **/
 
+import (
+	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+)
+
 const (
 	// PDP will lookup ingress authenticators
 	AuthStageIngress = "ingress" // Gateway Auth
@@ -16,10 +20,15 @@ const (
 	// Tap will lookup egress authenticators
 	AuthStageEgress = "egress" // Upstream Auth
 
-	AuthTypeBasic = "basic"
-	AuthTypeOIDC  = "oidc"
-	AuthTypeNone  = "none"
+	AuthTypeNoAuth = "noauth"
+	AuthTypeBasic  = "basic"
+	AuthTypeOIDC   = "oidc"
 )
+
+type AuthenticationProvider interface {
+	IngressAuthService(common_models.ArtefactUpStream) (IngressAuthenticationService, error)
+	EgressAuthService(common_models.ArtefactRepository) (EgressAuthenticationService, error)
+}
 
 // Adapter to wrap Envoy request to get credentials
 type AuthenticationCredentialProvider interface {

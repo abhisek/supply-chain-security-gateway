@@ -6,6 +6,7 @@ upstreams:
   type: maven2
   authentication:
     type: basic
+    provider: gateway-common-auth
   route:
     prefix: /maven2
   repository:
@@ -60,7 +61,7 @@ secrets:
     key: EXAMPLE_SECRET_FROM_ENVIRONMENT
 
 authenticators:
-  basic-auth:
+  gateway-common-auth:
     type: basic
     params:
       htpasswd_file: /auth/credentials.htpasswd

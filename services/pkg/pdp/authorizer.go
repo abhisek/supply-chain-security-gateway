@@ -2,14 +2,13 @@ package pdp
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	pds_api "github.com/abhisek/supply-chain-gateway/services/gen"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/auth"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
@@ -27,6 +26,7 @@ var (
 
 type authorizationService struct {
 	config            *common_config.Config
+	authProvider      auth.AuthenticationProvider
 	policyEngine      *PolicyEngine
 	policyDataService pds_api.PolicyDataServiceClient
 }
@@ -37,7 +37,10 @@ func NewAuthorizationService(config *common_config.Config, p pds_api.PolicyDataS
 		return &authorizationService{}, err
 	}
 
-	return &authorizationService{config: config, policyEngine: engine, policyDataService: p}, nil
+	authProvider := auth.NewAuthenticationProvider(config)
+	return &authorizationService{config: config,
+		authProvider: authProvider,
+		policyEngine: engine, policyDataService: p}, nil
 }
 
 func (s *authorizationService) Check(ctx context.Context,
@@ -144,27 +147,17 @@ func (s *authorizationService) authenticateForUpstream(upstream common_models.Ar
 		return "anonymous-head", nil
 	}
 
-	authHeader := req.Headers["authorization"]
-	if authHeader == "" {
-		return "", errors.New("no authorization header found in request")
-	}
-
-	parts := strings.SplitN(authHeader, " ", 2)
-	if len(parts) != 2 || !strings.EqualFold(parts[0], "basic") {
-		return "", errors.New("not a basic auth type")
-	}
-
-	decoded, err := base64.StdEncoding.DecodeString(parts[1])
+	authService, err := s.authProvider.IngressAuthService(upstream)
 	if err != nil {
 		return "", err
 	}
 
-	pair := strings.SplitN(string(decoded), ":", 2)
-	if len(pair) != 2 || pair[0] == "" {
-		return "", errors.New("invalid basic auth decoded pair")
+	identity, err := authService.Authenticate(auth.NewEnvoyIngressAuthAdapter(req))
+	if err != nil {
+		return "", err
 	}
 
-	return pair[0], nil
+	return identity.Id(), nil
 }
 
 // Convert pds_api.VulnerabilityMeta to common_models.ArtefactVulnerability
