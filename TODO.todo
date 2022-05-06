@@ -28,7 +28,7 @@ Data Collectors:
 Policy Data Service:
   ✔ Finalise database technology to use @done(22-04-28 20:28)
   ✔ Finalise the database schema @done(22-04-28 20:28)
-  ☐ Implement query API (gRPC)
+  ✔ Implement query API (gRPC) @done(22-05-06 12:33)
 
 Admin Service:
   ☐ RTFM and finalise the control plane architecture for Envoy, PDP, Tap etc.
@@ -37,6 +37,6 @@ Admin Service:
 
 Other wishlist:
   ☐ Artefact provenance verification as per SLSA framework
-  ☐ mTLS for all internal communication
+  ✔ mTLS for all internal communication @done(22-05-06 12:33)
   ☐ Dependency confusion attack mitigation
   ☐ Hot reload of all service configuration from a config server (etcd?)

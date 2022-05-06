@@ -1,0 +1,28 @@
+@startuml
+
+title "Authentication Flow"
+
+actor Client as Client
+
+box "Data Plane"
+  participant "Gateway"
+  participant "PDP"
+  participant "TAP"
+end box
+
+box "Upstream"
+  participant "Upstream"
+end box
+
+Client -> Gateway: Access repo (e.g. Maven Central)
+Gateway -> PDP: Authorize
+PDP -> PDP: Ingress Authentication
+PDP -> Gateway: Allow/Deny
+Gateway -> TAP: Handle request
+TAP -> TAP: Egress Authentication
+TAP -> Gateway
+Gateway -> Upstream: Send request with authentication
+Upstream -> Gateway: Artefact response
+Gateway -> Client: Artefact response
+
+@enduml

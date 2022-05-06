@@ -29,12 +29,24 @@ type DcsServiceConfig struct {
 	Publisher EventPublisherConfig `yaml:"publisher"`
 }
 
+type SecretConfig struct {
+	Source string `yaml:"source"`
+	Key    string `yaml:"key"`
+}
+
+type AuthenticatorConfig struct {
+	Type   string            `yaml:"type"`
+	Params map[string]string `yaml:"params"`
+}
+
 type GlobalConfig struct {
-	Upstreams  []models.ArtefactUpStream `yaml:"upstreams"`
-	Messaging  MessagingConfig           `yaml:"messaging"`
-	TapService TapServiceConfig          `yaml:"tap"`
-	PdpService PdpServiceConfig          `yaml:"pdp"`
-	DcsService DcsServiceConfig          `yaml:"dcs"`
+	Upstreams      []models.ArtefactUpStream      `yaml:"upstreams"`
+	Messaging      MessagingConfig                `yaml:"messaging"`
+	TapService     TapServiceConfig               `yaml:"tap"`
+	PdpService     PdpServiceConfig               `yaml:"pdp"`
+	DcsService     DcsServiceConfig               `yaml:"dcs"`
+	Secrets        map[string]SecretConfig        `yaml:"secrets"`
+	Authenticators map[string]AuthenticatorConfig `yaml:"authenticators"`
 }
 
 type Config struct {

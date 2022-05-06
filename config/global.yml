@@ -54,3 +54,13 @@ dcs:
     topics:
       vulnerability: com.msg.event.dcs.vulnerability
       sbom: com.msg.event.dcs.sbom
+secrets:
+  example-env-secret:
+    source: environment
+    key: EXAMPLE_SECRET_FROM_ENVIRONMENT
+
+authenticators:
+  basic-auth:
+    type: basic
+    params:
+      htpasswd_file: /auth/credentials.htpasswd
