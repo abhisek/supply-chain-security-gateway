@@ -2,6 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"reflect"
+
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 )
 
 func (m MetaEventWithAttributes) Serialize() ([]byte, error) {
@@ -35,4 +38,51 @@ func NewArtefactResponseEvent(a Artefact) DomainEvent[Artefact] {
 		MetaEventWithAttributes: newMetaEventWithAttributes(EventTypeArtefactResponseSubject),
 		Data:                    a,
 	}
+}
+
+type commonDomainEventBuilder[T any] struct{}
+
+func NewDomainEventBuilder[T any]() DomainEventBuilder[T] {
+	return &commonDomainEventBuilder[T]{}
+}
+
+func (b *commonDomainEventBuilder[T]) Created(model T) DomainEvent[T] {
+	return b.event(model, DomainEventTypeCreated)
+}
+
+func (b *commonDomainEventBuilder[T]) Updated(model T) DomainEvent[T] {
+	return b.event(model, DomainEventTypeUpdated)
+}
+
+func (b *commonDomainEventBuilder[T]) Deleted(model T) DomainEvent[T] {
+	return b.event(model, DomainEventTypeDeleted)
+}
+
+func (b *commonDomainEventBuilder[T]) event(model T, operation string) DomainEvent[T] {
+	return DomainEvent[T]{
+		MetaEventWithAttributes: MetaEventWithAttributes{
+			MetaEvent: MetaEvent{
+				Type:    EventTypeDomainEvent,
+				Version: EventSchemaVersion,
+			},
+			MetaAttributes: MetaAttributes{
+				Attributes: map[string]string{
+					"model":     reflect.TypeOf(model).Name(),
+					"operation": operation,
+				},
+			},
+		},
+		Data: model,
+	}
+}
+
+func (b *commonDomainEventBuilder[T]) From(v interface{}) (DomainEvent[T], error) {
+	var event DomainEvent[T]
+	err := utils.MapStruct(v, &event)
+
+	if err != nil {
+		return DomainEvent[T]{}, err
+	}
+
+	return event, nil
 }
