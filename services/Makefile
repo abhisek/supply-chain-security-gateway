@@ -47,3 +47,8 @@ test:
 .PHONY: clean
 clean:
 	-rm -rf out
+
+gosec:
+	-docker run --rm -it -w /app/ -v `pwd`:/app/ securego/gosec \
+	-exclude-dir=/app/gen -exclude-dir=/app/spec \
+	/app/...
