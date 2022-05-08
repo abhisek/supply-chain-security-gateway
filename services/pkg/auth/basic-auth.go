@@ -13,6 +13,7 @@ import (
 )
 
 var (
+	basicAuthUserNotFound        = errors.New("user not found in basic auth db")
 	basicAuthFailed              = errors.New("authentication denied")
 	basicAuthCredentialNotFound  = errors.New("credential not found in request")
 	basicAuthHashTypeUnsupported = errors.New("hash type is not supported")
@@ -42,16 +43,18 @@ func (p *basicAuthProvider) Authenticate(ctx context.Context, cp AuthenticationC
 
 	hp, ok := p.credentials[creds.UserId()]
 	if !ok {
-		return nil, basicAuthFailed
+		return nil, basicAuthUserNotFound
 	}
 
-	if p.safeCompareHash(creds.UserSecret(), hp) {
-		return NewAuthIdentity(AuthIdentityTypeBasicAuth,
-			creds.UserId(),
-			fmt.Sprintf("Basic Auth User: %s", creds.UserId())), nil
+	err = p.safeCompareHash(creds.UserSecret(), hp)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, basicAuthFailed
+	return NewAuthIdentity(AuthIdentityTypeBasicAuth,
+		creds.UserId(),
+		fmt.Sprintf("Basic Auth User: %s", creds.UserId())), nil
+
 }
 
 func (p *basicAuthProvider) loadCredentials() error {
@@ -79,15 +82,15 @@ func (p *basicAuthProvider) loadCredentials() error {
 	return nil
 }
 
-func (p *basicAuthProvider) safeCompareHash(password string, hash string) bool {
+func (p *basicAuthProvider) safeCompareHash(password string, hash string) error {
 	if !strings.HasPrefix(hash, "$2y$") {
-		return false
+		return basicAuthHashTypeUnsupported
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
-		return true
+		return basicAuthFailed
 	}
 
-	return false
+	return nil
 }

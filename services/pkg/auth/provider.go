@@ -17,15 +17,22 @@ func NewAuthenticationProvider(config *common_config.Config) AuthenticationProvi
 }
 
 func (a *authProvider) IngressAuthService(upstream common_models.ArtefactUpStream) (IngressAuthenticationService, error) {
-	switch upstream.Authentication.Provider {
-	case AuthTypeNoAuth:
-		return NewIngressNoAuthService()
-	case AuthTypeBasic:
+	cf := func(s func(c common_config.AuthenticatorConfig) (IngressAuthenticationService, error)) (IngressAuthenticationService, error) {
 		cfg, ok := a.config.Global.Authenticators[upstream.Authentication.Provider]
 		if !ok {
 			return nil, fmt.Errorf("no authenticator defined for: %s", upstream.Authentication.Provider)
 		}
-		return NewIngressBasicAuthService(cfg)
+
+		return s(cfg)
+	}
+
+	switch upstream.Authentication.Type {
+	case AuthTypeNoAuth:
+		return NewIngressNoAuthService()
+	case AuthTypeBasic:
+		return cf(func(c common_config.AuthenticatorConfig) (IngressAuthenticationService, error) {
+			return NewIngressBasicAuthService(c)
+		})
 	default:
 		return nil, fmt.Errorf("no auth service available for: %s", upstream.Authentication.Provider)
 	}
