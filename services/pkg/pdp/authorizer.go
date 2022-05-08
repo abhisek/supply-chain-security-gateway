@@ -54,7 +54,7 @@ func (s *authorizationService) Check(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	userId, err := s.authenticateForUpstream(upstream, httpReq)
+	userId, err := s.authenticateForUpstream(ctx, upstream, httpReq)
 	if err != nil {
 		log.Printf("Error resolving userId: %v", err)
 		return &envoy_service_auth_v3.CheckResponse{}, err
@@ -89,7 +89,7 @@ func (s *authorizationService) Check(ctx context.Context,
 		upstreamArtefact.Name, upstreamArtefact.Version,
 		httpReq.Method, httpReq.Path)
 
-	policyRespose, err := s.policyEngine.Evaluate(NewPolicyInput(upstreamArtefact, upstream, vulnerabilities))
+	policyRespose, err := s.policyEngine.Evaluate(ctx, NewPolicyInput(upstreamArtefact, upstream, vulnerabilities))
 	if err != nil {
 		log.Printf("Failed to evaluate policy: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
@@ -137,7 +137,8 @@ func (s *authorizationService) resolveRequestedArtefact(req *envoy_service_auth_
 // POC implementation of extracting UserId from basic auth header. Auth needs to be a
 // service of its own with pluggable IDP support e.g. Github OIDC Token as password
 // This helps us identify who is accessing the artefact so that violations can be attributed
-func (s *authorizationService) authenticateForUpstream(upstream common_models.ArtefactUpStream,
+func (s *authorizationService) authenticateForUpstream(ctx context.Context,
+	upstream common_models.ArtefactUpStream,
 	req *envoy_service_auth_v3.AttributeContext_HttpRequest) (string, error) {
 	if !upstream.NeedAuthentication() {
 		return "anonymous-upstream", nil
@@ -152,7 +153,7 @@ func (s *authorizationService) authenticateForUpstream(upstream common_models.Ar
 		return "", err
 	}
 
-	identity, err := authService.Authenticate(auth.NewEnvoyIngressAuthAdapter(req))
+	identity, err := authService.Authenticate(ctx, auth.NewEnvoyIngressAuthAdapter(req))
 	if err != nil {
 		return "", err
 	}

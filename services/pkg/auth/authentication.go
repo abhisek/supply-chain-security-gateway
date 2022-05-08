@@ -10,6 +10,8 @@ package auth
 **/
 
 import (
+	"context"
+
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 )
 
@@ -23,6 +25,8 @@ const (
 	AuthTypeNoAuth = "noauth"
 	AuthTypeBasic  = "basic"
 	AuthTypeOIDC   = "oidc"
+
+	AuthIdentityTypeBasicAuth = "BasicAuth"
 )
 
 type AuthenticationProvider interface {
@@ -50,7 +54,7 @@ type AuthenticatedIdentity interface {
 
 // Authentication for gateway users
 type IngressAuthenticationService interface {
-	Authenticate(AuthenticationCredentialProvider) (AuthenticatedIdentity, error)
+	Authenticate(context.Context, AuthenticationCredentialProvider) (AuthenticatedIdentity, error)
 }
 
 // Apply credentials to outgoing request to repo

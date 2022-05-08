@@ -20,6 +20,12 @@ func (a *authProvider) IngressAuthService(upstream common_models.ArtefactUpStrea
 	switch upstream.Authentication.Provider {
 	case AuthTypeNoAuth:
 		return NewIngressNoAuthService()
+	case AuthTypeBasic:
+		cfg, ok := a.config.Global.Authenticators[upstream.Authentication.Provider]
+		if !ok {
+			return nil, fmt.Errorf("no authenticator defined for: %s", upstream.Authentication.Provider)
+		}
+		return NewIngressBasicAuthService(cfg)
 	default:
 		return nil, fmt.Errorf("no auth service available for: %s", upstream.Authentication.Provider)
 	}

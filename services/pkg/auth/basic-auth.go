@@ -1,10 +1,21 @@
 package auth
 
 import (
+	"bufio"
+	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	basicAuthFailed              = errors.New("authentication denied")
+	basicAuthCredentialNotFound  = errors.New("credential not found in request")
+	basicAuthHashTypeUnsupported = errors.New("hash type is not supported")
 )
 
 // Implement basic auth for gateway ingress
@@ -15,16 +26,68 @@ type basicAuthProvider struct {
 }
 
 func NewIngressBasicAuthService(config common_config.AuthenticatorConfig) (IngressAuthenticationService, error) {
-	// TODO: read and parse the htpasswd file
-	return &basicAuthProvider{config: config}, nil
-}
-
-func (p *basicAuthProvider) Authenticate(cp AuthenticationCredentialProvider) (AuthenticatedIdentity, error) {
-	creds, err := cp.Credential()
-	if err != nil {
-		return nil, errors.New("no credential found")
+	p := &basicAuthProvider{config: config, file: config.Params["htpasswd_file"]}
+	if err := p.loadCredentials(); err != nil {
+		return nil, err
 	}
 
-	fmt.Printf("creds: %p\n", &creds)
-	return nil, errors.New("unimplemented")
+	return p, nil
+}
+
+func (p *basicAuthProvider) Authenticate(ctx context.Context, cp AuthenticationCredentialProvider) (AuthenticatedIdentity, error) {
+	creds, err := cp.Credential()
+	if err != nil {
+		return nil, basicAuthCredentialNotFound
+	}
+
+	hp, ok := p.credentials[creds.UserId()]
+	if !ok {
+		return nil, basicAuthFailed
+	}
+
+	if p.safeCompareHash(creds.UserSecret(), hp) {
+		return NewAuthIdentity(AuthIdentityTypeBasicAuth,
+			creds.UserId(),
+			fmt.Sprintf("Basic Auth User: %s", creds.UserId())), nil
+	}
+
+	return nil, basicAuthFailed
+}
+
+func (p *basicAuthProvider) loadCredentials() error {
+	file, err := os.OpenFile(p.file, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+
+	s := make(map[string]string, 0)
+	for scanner.Scan() {
+		parts := strings.SplitN(scanner.Text(), ":", 2)
+		if len(parts) == 2 {
+			s[parts[0]] = s[parts[1]]
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	p.credentials = s
+	return nil
+}
+
+func (p *basicAuthProvider) safeCompareHash(password string, hash string) bool {
+	if !strings.HasPrefix(hash, "$2y$") {
+		return false
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	if err != nil {
+		return true
+	}
+
+	return false
 }

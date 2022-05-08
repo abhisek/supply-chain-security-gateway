@@ -18,7 +18,8 @@ upstreams:
 - name: gradle-plugins
   type: maven2
   authentication:
-    type: noauth
+    type: basic
+    provider: gateway-common-auth
   route:
     prefix: /gradle-plugins/m2
   repository:
@@ -64,4 +65,4 @@ authenticators:
   gateway-common-auth:
     type: basic
     params:
-      htpasswd_file: /auth/credentials.htpasswd
+      htpasswd_file: /auth/basic-auth-credentials
