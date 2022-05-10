@@ -10,6 +10,11 @@ import (
 
 type authProvider struct {
 	config *common_config.Config
+
+	// Unbounded cache, should not be a problem because the
+	// number of providers can be limited
+	ingressCache map[string]IngressAuthenticationService
+	egressCache  map[string]EgressAuthenticationService
 }
 
 func NewAuthenticationProvider(config *common_config.Config) AuthenticationProvider {
@@ -25,6 +30,9 @@ func (a *authProvider) IngressAuthService(upstream common_models.ArtefactUpStrea
 
 		return s(cfg)
 	}
+
+	// TODO: Implement a cache for services to prevent reinitialize the same
+	// authenticator, uniquely identified by a name
 
 	switch upstream.Authentication.Type {
 	case AuthTypeNoAuth:

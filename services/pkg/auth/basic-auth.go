@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -58,6 +59,8 @@ func (p *basicAuthProvider) Authenticate(ctx context.Context, cp AuthenticationC
 }
 
 func (p *basicAuthProvider) loadCredentials() error {
+	log.Printf("Loading basic auth credentials from: %s", p.file)
+
 	file, err := os.OpenFile(p.file, os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		return err
@@ -70,7 +73,7 @@ func (p *basicAuthProvider) loadCredentials() error {
 	for scanner.Scan() {
 		parts := strings.SplitN(scanner.Text(), ":", 2)
 		if len(parts) == 2 {
-			s[parts[0]] = s[parts[1]]
+			s[parts[0]] = parts[1]
 		}
 	}
 
