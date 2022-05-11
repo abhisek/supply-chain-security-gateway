@@ -7,7 +7,7 @@ on:
     branches:
       - main
 jobs:
-  gosec:
+  gitleaks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
