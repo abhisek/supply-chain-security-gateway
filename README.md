@@ -8,6 +8,8 @@ A reference architecture and **<ins>proof of concept implementation</ins>** of a
     - [Data Plane Flow](#data-plane-flow)
   - [Usage](#usage)
     - [Authentication](#authentication)
+      - [Ingress Authentication](#ingress-authentication)
+        - [Basic Authentication](#basic-authentication)
   - [Development](#development)
     - [PDP Development](#pdp-development)
     - [Policy Development](#policy-development)
@@ -107,10 +109,28 @@ docker-compose up --force-recreate --remove-orphans --build -d
 
 ### Authentication
 
-No real authentication is supported yet. Following are planned:
+There are two authentication points:
 
-* Gateway authentication using pluggable IDP such as Github OIDC
-* Upstream repository basic authentication
+1. Ingress
+2. Egress
+
+Ingress authentication is for incoming requests to the gateway and can be used to identify who is accessing the gateway.
+
+Egress authentication is for upstream repositories, especially the ones that need authentication e.g. CodeArtifact, JFrog, Nexus etc.
+
+- [Ingress Gateway Authentication](docs/Gateway-Authentication.md)
+
+#### Ingress Authentication
+
+##### Basic Authentication
+
+Use `htpasswd` to add users:
+
+```bash
+htpasswd -nbB user1 password1 >> ./config/config/gateway-auth-basic
+```
+
+Enable authentication for upstream in `config/global.yml`
 
 ## Development
 

@@ -29,3 +29,7 @@ func SafelyGetValue[T any](target *T) T {
 
 	return vi
 }
+
+func IsEmptyString(s string) bool {
+	return s == ""
+}

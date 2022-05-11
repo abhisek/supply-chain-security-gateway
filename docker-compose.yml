@@ -28,6 +28,7 @@ services:
     build: ./services
     command: pdp-server
     volumes:
+      - ./config/gateway-auth-basic:/auth/basic-auth-credentials
       - ./config/global.yml:/config/global.yml
       - ./policies:/policies
       - ./pki/pdp/server.crt:/config/pki/server.crt

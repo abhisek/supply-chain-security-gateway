@@ -34,13 +34,13 @@ func NewPolicyEngine(path string, changeMonitor bool) (*PolicyEngine, error) {
 	return &svc, nil
 }
 
-func (svc *PolicyEngine) Evaluate(input PolicyInput) (PolicyResponse, error) {
+func (svc *PolicyEngine) Evaluate(ctx context.Context, input PolicyInput) (PolicyResponse, error) {
 	svc.lock.Lock()
 	defer svc.lock.Unlock()
 
-	log.Printf("PolicyInput: %s", utils.Introspect(input))
+	// log.Printf("PolicyInput: %s", utils.Introspect(input))
 
-	rs, err := svc.query.Eval(context.Background(), rego.EvalInput(input))
+	rs, err := svc.query.Eval(ctx, rego.EvalInput(input))
 	if err != nil {
 		return PolicyResponse{}, err
 	}
@@ -56,7 +56,7 @@ func (svc *PolicyEngine) Evaluate(input PolicyInput) (PolicyResponse, error) {
 		return PolicyResponse{}, err
 	}
 
-	log.Printf("Policy response: %s", utils.Introspect(p))
+	// log.Printf("Policy response: %s", utils.Introspect(p))
 	return p, nil
 }
 

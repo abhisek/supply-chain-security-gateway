@@ -6,6 +6,7 @@ upstreams:
   type: maven2
   authentication:
     type: basic
+    provider: gateway-common-auth
   route:
     prefix: /maven2
   repository:
@@ -17,7 +18,8 @@ upstreams:
 - name: gradle-plugins
   type: maven2
   authentication:
-    type: noauth
+    type: basic
+    provider: gateway-common-auth
   route:
     prefix: /gradle-plugins/m2
   repository:
@@ -54,3 +56,13 @@ dcs:
     topics:
       vulnerability: com.msg.event.dcs.vulnerability
       sbom: com.msg.event.dcs.sbom
+secrets:
+  example-env-secret:
+    source: environment
+    key: EXAMPLE_SECRET_FROM_ENVIRONMENT
+
+authenticators:
+  gateway-common-auth:
+    type: basic
+    params:
+      htpasswd_file: /auth/basic-auth-credentials

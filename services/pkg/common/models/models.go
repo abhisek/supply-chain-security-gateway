@@ -23,7 +23,8 @@ type ArtefactRepositoryAuthentication struct {
 }
 
 type ArtefactUpstreamAuthentication struct {
-	Type string `yaml:"type"`
+	Type     string `yaml:"type"`
+	Provider string `yaml:"provider"`
 }
 
 type ArtefactRepository struct {
