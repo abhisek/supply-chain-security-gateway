@@ -38,6 +38,10 @@ func (s ArtefactUpStream) NeedAuthentication() bool {
 	return s.Authentication.Type != ArtefactUpstreamAuthTypeNoAuth
 }
 
+func (s ArtefactUpStream) NeedUpstreamAuthentication() bool {
+	return s.Repository.Authentication.Type != ArtefactUpstreamAuthTypeNoAuth
+}
+
 func (s ArtefactUpStream) MatchHost(host string) bool {
 	return (s.RoutingRule.Host == host)
 }

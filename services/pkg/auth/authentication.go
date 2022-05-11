@@ -64,5 +64,5 @@ type AuthenticationCredentialApplier interface {
 
 // Authenticate upstream repo request
 type EgressAuthenticationService interface {
-	Authenticate(AuthenticationCredentialApplier) error
+	Authenticate(context.Context, AuthenticationCredentialApplier) error
 }
