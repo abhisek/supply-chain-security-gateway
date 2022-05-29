@@ -28,7 +28,7 @@ git submodule update --init --recursive
 Initialize keys and certificates for mTLS
 
 ```bash
-sh bootstrap.sh
+./bootstrap.sh
 ```
 
 > This will generate root certificate, per service certificates in `pki/`.
