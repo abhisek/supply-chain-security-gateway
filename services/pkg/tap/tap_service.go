@@ -52,8 +52,9 @@ func (s *tapService) Process(srv envoy_v3_ext_proc_pb.ExternalProcessor_ProcessS
 			err = s.handleRequestHeaders(ctx,
 				req.Request.(*envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders))
 
-			// Add an empty processing response to keep Envoy happy
 			resp.Response = &envoy_v3_ext_proc_pb.ProcessingResponse_RequestHeaders{}
+			err = s.applyUpstreamAuth(req.Request.(*envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders),
+				resp.Response.(*envoy_v3_ext_proc_pb.ProcessingResponse_RequestHeaders))
 			break
 		case *envoy_v3_ext_proc_pb.ProcessingRequest_ResponseHeaders:
 			err = s.handleResponseHeaders(ctx,

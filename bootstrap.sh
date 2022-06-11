@@ -15,23 +15,16 @@ for svc in $PARTICIPATING_SERVICES; do
 
   openssl genrsa -out pki/$svc/server.key 2048
 
-  # openssl req -x509 -key pki/$svc/server.key \
-  #   -out pki/$svc/server.crt -sha256 -days 30 \
-  #   -subj "/CN=$svc" \
-  #   -addext "subjectAltName=DNS:$svc"
-
   openssl req -new -sha256 -key pki/$svc/server.key \
     -subj "/C=IN/ST=KA/O=WeekendLabs/CN=$svc" \
-    -addext "subjectAltName = DNS:$svc" \
+    -addext "subjectAltName=DNS:$svc" \
     -out pki/$svc/server.csr
 
-  echo "[v3_req]\nsubjectAltName = DNS:$svc" > /tmp/$$-san.txt
   openssl x509 -req -in pki/$svc/server.csr \
     -CA pki/root.crt -CAkey pki/root.key -CAcreateserial \
     --extensions v3_req \
-    -extfile /tmp/$$-san.txt \
+    -extfile <(printf "[v3_req]\nsubjectAltName=DNS:$svc") \
     -out pki/$svc/server.crt -days 30 -sha256
-  rm /tmp/$$-san.txt
 done
 
 # This is insecure but is needed for docker-compose
