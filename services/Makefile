@@ -1,7 +1,7 @@
 all: clean setup server
 
 oapi-codegen-install:
-	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
+	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.10.1
 
 protoc-install:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest

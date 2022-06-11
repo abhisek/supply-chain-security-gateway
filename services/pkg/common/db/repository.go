@@ -33,6 +33,7 @@ func (r *VulnerabilityRepository) Upsert(vulnerability models.Vulnerability) err
 		if ntx.Error == nil && len(records) > 0 {
 			if records[0].DataModifiedAt.Unix() < vulnerability.DataModifiedAt.Unix() {
 				vulnerability.ID = records[0].ID
+				vulnerability.CreatedAt = records[0].CreatedAt
 				ntx = db.Save(&vulnerability)
 			}
 		} else {
