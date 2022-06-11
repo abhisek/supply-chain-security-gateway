@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package raya;
+
+option go_package = "github.com/abhisek/supply-chain-gateway/services/gen";
+
+import "validate/validate.proto";
+
+message KV {
+  string key = 1;
+  string value = 2;
+}
+
+message Package {
+  string ecosystem = 1;   // Package ecosystem
+  string name = 2;   // nokogiri, requests, com.google:gson
+}
+
+message PackageVersion {
+  Package package = 1;
+  string version = 2;
+}
+
+message PackageAdvisoryIdentifier {
+  string type = 1;
+  string id = 2;
+}
+
+enum Severity {
+  UNKNOWN = 0;
+  INFO = 1;
+  LOW = 2;
+  MEDIUM = 3;
+  HIGH = 4;
+  CRITICAL = 5;
+}
+
+message PackageAdvisorySeverity {
+  Severity severity = 1;    // Computed severity to be documented
+
+  string github_severity = 2;
+  float cvssv3_score = 3;
+}
+
+message PackageAdvisory {
+  string source = 1;
+  string source_id = 2;
+  string title = 3;
+
+  repeated PackageAdvisoryIdentifier identifiers = 7;
+  PackageAdvisorySeverity advisory_severity = 8;
+}
+
+message PackageVersionMetaQueryRequest {
+  PackageVersion package_version = 1;
+}
+
+message PackageVersionMetaQueryResponse {
+  PackageVersion package_version = 1;
+
+  repeated string licenses = 2;             // SPDX license names
+  repeated PackageAdvisory advisories = 3;  // Vulnerabilities
+}
+
+service Raya {
+  rpc GetPackageMetaByVersion(PackageVersionMetaQueryRequest) returns(PackageVersionMetaQueryResponse) {}
+}
+
+/**
+  We need 2 types of APIs
+    1. Meta query which returns a single result ideally
+    2. List or retrieve operation that returns multiple data
+*/

@@ -26,6 +26,16 @@ protoc-codegen:
 	protoc -I ./spec/proto/ \
 		-I ./spec/proto/lib/ -I ./spec/proto/lib/protoc-gen-validate \
 		--go_out=./gen/ \
+		--go-grpc_out=./gen/ \
+		--validate_out="lang=go:./gen/" \
+		--go_opt=paths=source_relative \
+		--go-grpc_opt=paths=source_relative \
+		--validate_opt=paths=source_relative \
+		./spec/proto/raya.proto
+
+	protoc -I ./spec/proto/ \
+		-I ./spec/proto/lib/ -I ./spec/proto/lib/protoc-gen-validate \
+		--go_out=./gen/ \
 		--validate_out="lang=go:./gen/" \
 		--go_opt=paths=source_relative \
 		--validate_opt=paths=source_relative \

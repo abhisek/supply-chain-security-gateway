@@ -48,6 +48,10 @@ tap:
       upstream_response: com.msg.event.upstream.response
 pdp:
   monitor_mode: false
+  pds_client:
+    type: local
+    host: pds
+    port: 9002
   publisher:
     topics:
       policy_denied: com.msg.event.pdp.policy_denied
