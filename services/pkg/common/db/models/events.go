@@ -9,6 +9,7 @@ const (
 	EventTypeVulnerabilityUpdated = "event.vulnerability.updated"
 )
 
+// TODO: Migrate to spec driven event format
 func NewVulnerabilityDomainEvent(v Vulnerability, t string) common_models.DomainEvent[Vulnerability] {
 	return common_models.DomainEvent[Vulnerability]{
 		MetaEventWithAttributes: common_models.MetaEventWithAttributes{

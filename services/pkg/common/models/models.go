@@ -8,8 +8,8 @@ const (
 
 	ArtefactUpstreamAuthTypeNoAuth = "noauth"
 
-	ArtefactLicenseTypeSpdx      = "spdx"
-	ArtefactLicenseTypeCycloneDx = "cyclonedx"
+	ArtefactLicenseTypeSpdx      = "SPDX"
+	ArtefactLicenseTypeCycloneDx = "CycloneDX"
 
 	ArtefactVulnerabilitySeverityCritical = "CRITICAL"
 	ArtefactVulnerabilitySeverityHigh     = "HIGH"
@@ -73,9 +73,9 @@ type ArtefactVulnerability struct {
 
 // Align with SPDX / CycloneDX
 type ArtefactLicense struct {
-	Type string `json:"type"`
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Type string `json:"type"` // SPDX | CyloneDX
+	Id   string `json:"id"`   // SPDX or CycloneDX ID
+	Name string `json:"name"` // Human Readable Name
 }
 
 type Artefact struct {

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"reflect"
 
+	event_api "github.com/abhisek/supply-chain-gateway/services/gen"
+
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 )
 
@@ -85,4 +87,18 @@ func (b *commonDomainEventBuilder[T]) From(v interface{}) (DomainEvent[T], error
 	}
 
 	return event, nil
+}
+
+// Utils for new spec driven events
+func eventUid() string {
+	return utils.NewUniqueId()
+}
+
+func NewSpecEventHeader(event_type, source string) event_api.EventHeader {
+	return event_api.EventHeader{
+		Type:    event_type,
+		Source:  source,
+		Id:      eventUid(),
+		Context: &event_api.EventContext{},
+	}
 }

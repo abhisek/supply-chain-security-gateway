@@ -86,7 +86,11 @@ func (s *authorizationService) Check(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	if !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed() {
+	gatewayDeny := !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed()
+	s.publishDecisionEvent(ctx, !gatewayDeny, s.config.Global.PdpService.MonitorMode,
+		upstream, upstreamArtefact, policyRespose)
+
+	if gatewayDeny {
 		log.Printf("Policy denied upstream request")
 		return &envoy_service_auth_v3.CheckResponse{}, errPolicyDeniedUpStreamRequest
 	}
@@ -150,4 +154,11 @@ func (s *authorizationService) authenticateForUpstream(ctx context.Context,
 	}
 
 	return identity.Id(), nil
+}
+
+func (s *authorizationService) publishDecisionEvent(ctx context.Context,
+	gw_allowed bool, monitor_mode bool, upstream common_models.ArtefactUpStream,
+	artefact common_models.Artefact, result PolicyResponse) {
+
+	// TODO: Publish event
 }
