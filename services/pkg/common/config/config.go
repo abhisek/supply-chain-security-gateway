@@ -21,9 +21,10 @@ type TapServiceConfig struct {
 }
 
 type PdsClientConfig struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
-	Type string `yaml:"type"`
+	Host    string `yaml:"host"`
+	Port    string `yaml:"port"`
+	UseMtls bool   `yaml:"mtls"`
+	Type    string `yaml:"type"`
 }
 
 type PdpServiceConfig struct {

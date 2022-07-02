@@ -16,6 +16,11 @@ import (
 type GrpcAdapterConfigurer func(server *grpc.Server)
 type GrpcClientConfigurer func(conn *grpc.ClientConn)
 
+var (
+	NoGrpcDialOptions = []grpc.DialOption{}
+	NoGrpcConfigurer  = func(conn *grpc.ClientConn) {}
+)
+
 func GrpcStreamValidatorInterceptor() grpc.ServerOption {
 	return grpc.StreamInterceptor(
 		grpc_middleware.ChainStreamServer(
@@ -71,7 +76,7 @@ func GrpcMtlsClient(name, serverName, host, port string, dopts []grpc.DialOption
 	return grpcClient(name, host, port, dopts, configurer)
 }
 
-func GrpcInsecureClient(name, serverName, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
+func GrpcInsecureClient(name, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
 	return grpcClient(name, host, port, dopts, configurer)
 }
 

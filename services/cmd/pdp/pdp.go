@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
@@ -18,13 +17,11 @@ func main() {
 		log.Fatalf("Failed to load config: %s", err.Error())
 	}
 
-	grpconn, err := common_adapters.GrpcMtlsClient("PDS", os.Getenv("PDS_HOST"),
-		os.Getenv("PDS_HOST"), os.Getenv("PDS_PORT"), []grpc.DialOption{}, func(conn *grpc.ClientConn) {})
+	policyDataService, err := pdp.NewPolicyDataServiceClient(config.Global.PdpService)
 	if err != nil {
-		log.Fatalf("Failed to establish connection with PDS: %v", err)
+		log.Fatalf("Failed to create policy data service client: %v", err)
 	}
 
-	policyDataService := pdp.NewLocalPolicyDataClient(grpconn)
 	authService, err := pdp.NewAuthorizationService(config, policyDataService)
 	if err != nil {
 		log.Fatalf("Failed to create auth service: %s", err.Error())

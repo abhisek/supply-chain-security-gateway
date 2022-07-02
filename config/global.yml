@@ -52,6 +52,7 @@ pdp:
     type: local
     host: pds
     port: 9002
+    mtls: true
   publisher:
     topics:
       policy_denied: com.msg.event.pdp.policy_denied
