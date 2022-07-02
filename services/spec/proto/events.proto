@@ -20,9 +20,15 @@ message EventContext {
   string project_id = 2;  // 0 indicate unsegmented
 }
 
+// Enumeration of all Event Types
+enum EventType {
+  ErrorNoSuchEvent = 0;
+  PolicyEvaluationAuditEvent = 1;
+}
+
 // Event header and metadata
 message EventHeader {
-  string type = 1;    // Type of the event
+  EventType type = 1;    // Type of the event
   string id = 2;      // Unique event ID
   string source = 3;  // Which service generated this event
 

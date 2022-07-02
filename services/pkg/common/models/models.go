@@ -16,6 +16,8 @@ const (
 	ArtefactVulnerabilitySeverityMedium   = "MEDIUM"
 	ArtefactVulnerabilitySeverityLow      = "LOW"
 	ArtefactVulnerabilitySeverityInfo     = "INFO"
+
+	ArtefactVulnerabilityScoreTypeCVSSv3 = "CVSSv3"
 )
 
 type ArtefactRepositoryAuthentication struct {

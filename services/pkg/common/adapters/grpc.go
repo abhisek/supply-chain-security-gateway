@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -77,6 +78,8 @@ func GrpcMtlsClient(name, serverName, host, port string, dopts []grpc.DialOption
 }
 
 func GrpcInsecureClient(name, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
+	tc := grpc.WithTransportCredentials(insecure.NewCredentials())
+	dopts = append(dopts, tc)
 	return grpcClient(name, host, port, dopts, configurer)
 }
 
