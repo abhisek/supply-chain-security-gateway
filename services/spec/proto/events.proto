@@ -13,7 +13,6 @@ message EventTimestamp {
   int32 nanos = 2;
 }
 
-
 // Use this for all contextual metadata
 message EventContext {
   string org_id = 1;      // 0 indicate unsegmented

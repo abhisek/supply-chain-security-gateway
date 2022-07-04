@@ -49,10 +49,14 @@ tap:
 pdp:
   monitor_mode: false
   pds_client:
-    type: local
-    host: pds
-    port: 9002
-    mtls: true
+    # type: local
+    # host: pds
+    # port: 9002
+    # mtls: true
+    type: raya
+    host: 10.100.5.70
+    port: 50051
+    mtls: false
   publisher:
     topics:
       policy_denied: com.msg.event.pdp.policy_denied

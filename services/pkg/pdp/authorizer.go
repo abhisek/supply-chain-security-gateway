@@ -17,6 +17,8 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/genproto/googleapis/rpc/code"
 	"google.golang.org/genproto/googleapis/rpc/status"
+
+	event_api "github.com/abhisek/supply-chain-gateway/services/gen"
 )
 
 var (
@@ -160,5 +162,42 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 	gw_allowed bool, monitor_mode bool, upstream common_models.ArtefactUpStream,
 	artefact common_models.Artefact, result PolicyResponse) {
 
-	// TODO: Publish event
+	eh := common_models.NewSpecHeaderWithContext(event_api.EventType_PolicyEvaluationAuditEvent, "pdp",
+		&event_api.EventContext{
+			OrgId:     "0",
+			ProjectId: "0",
+		})
+
+	var violations []*event_api.PolicyEvaluationEvent_Data_Result_Violation = make([]*event_api.PolicyEvaluationEvent_Data_Result_Violation, 0)
+	event := &event_api.PolicyEvaluationEvent{
+		Header: eh,
+		Data: &event_api.PolicyEvaluationEvent_Data{
+			Artefact: &event_api.Artefact{
+				Ecosystem: upstream.Type,
+				Group:     artefact.Group,
+				Name:      artefact.Name,
+				Version:   artefact.Version,
+			},
+			Upstream: &event_api.ArtefactUpstream{
+				Type: upstream.Type,
+				Name: upstream.Name,
+			},
+			Result: &event_api.PolicyEvaluationEvent_Data_Result{
+				PolicyAllowed:    result.Allow,
+				EffectiveAllowed: gw_allowed,
+				MonitorMode:      monitor_mode,
+				Violations:       violations,
+			},
+		},
+	}
+
+	for _, v := range result.Violations {
+		event.Data.Result.Violations = append(event.Data.Result.Violations,
+			&event_api.PolicyEvaluationEvent_Data_Result_Violation{
+				Code:    int32(v.Code),
+				Message: v.Message,
+			})
+	}
+
+	log.Printf("Event: %v", event)
 }

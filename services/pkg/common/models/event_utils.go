@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"time"
 
 	event_api "github.com/abhisek/supply-chain-gateway/services/gen"
 
@@ -46,11 +47,26 @@ func eventUid() string {
 	return utils.NewUniqueId()
 }
 
-func NewSpecEventHeader(tp event_api.EventType, source string) event_api.EventHeader {
-	return event_api.EventHeader{
-		Type:    tp,
-		Source:  source,
-		Id:      eventUid(),
-		Context: &event_api.EventContext{},
+func eventTimestamp(ts time.Time) *event_api.EventTimestamp {
+	return &event_api.EventTimestamp{
+		Seconds: ts.Unix(),
+		Nanos:   int32(ts.Nanosecond()),
 	}
+}
+
+func NewSpecEventHeader(tp event_api.EventType, source string) *event_api.EventHeader {
+	return &event_api.EventHeader{
+		Type:      tp,
+		Source:    source,
+		Id:        eventUid(),
+		Context:   &event_api.EventContext{},
+		CreatedAt: eventTimestamp(time.Now()),
+	}
+}
+
+func NewSpecHeaderWithContext(tp event_api.EventType, source string, ctx *event_api.EventContext) *event_api.EventHeader {
+	eh := NewSpecEventHeader(tp, source)
+	eh.Context = ctx
+
+	return eh
 }
