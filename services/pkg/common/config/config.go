@@ -13,6 +13,7 @@ type MessagingConfig struct {
 }
 
 type EventPublisherConfig struct {
+	Type          string            `yaml:"type"`
 	TopicMappings map[string]string `yaml:"topics"`
 }
 

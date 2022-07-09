@@ -3,7 +3,8 @@ module github.com/abhisek/supply-chain-gateway/services
 go 1.18
 
 require (
-	github.com/envoyproxy/go-control-plane v0.10.1
+	github.com/confluentinc/confluent-kafka-go v1.9.1
+	github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/gojek/heimdall/v7 v7.0.2
 	github.com/golang/protobuf v1.5.2
@@ -15,8 +16,8 @@ require (
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	golang.org/x/net v0.0.0-20220418201149-a630d4f3e7a2
-	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa
-	google.golang.org/grpc v1.45.0
+	google.golang.org/genproto v0.0.0-20220503193339-ba3ae3f07e29
+	google.golang.org/grpc v1.46.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/datatypes v1.0.6
@@ -35,16 +36,15 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf // indirect
+	github.com/jhump/protoreflect v1.12.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
 	github.com/nats-io/nats-server/v2 v2.8.1 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect

@@ -42,6 +42,8 @@ services:
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
       PDS_HOST: pds
       PDS_PORT: 9002
+      PDP_KAFKA_PONGO_BOOTSTRAP_SERVERS: 10.100.5.70:9092
+      PDP_KAFKA_PONGO_SCHEMA_REGISTRY_URL: http://10.100.5.70:8081
   tap:
     build: ./services
     command: tap-server

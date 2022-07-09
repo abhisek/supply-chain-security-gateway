@@ -58,7 +58,10 @@ pdp:
     port: 50051
     mtls: false
   publisher:
+    #type: nats
+    type: kafka-pongo
     topics:
+      policy_audit: eventlogs
       policy_denied: com.msg.event.pdp.policy_denied
 dcs:
   publisher:

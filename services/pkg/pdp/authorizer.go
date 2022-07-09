@@ -9,6 +9,7 @@ import (
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/auth"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	envoy_api_v3_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -31,9 +32,11 @@ type authorizationService struct {
 	authProvider      auth.AuthenticationProvider
 	policyEngine      *PolicyEngine
 	policyDataService PolicyDataClientInterface
+	messagingService  messaging.MessagingService
 }
 
-func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInterface) (envoy_service_auth_v3.AuthorizationServer, error) {
+func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInterface,
+	m messaging.MessagingService) (envoy_service_auth_v3.AuthorizationServer, error) {
 	engine, err := NewPolicyEngine(os.Getenv("PDP_POLICY_PATH"), true)
 	if err != nil {
 		return &authorizationService{}, err
@@ -41,8 +44,10 @@ func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInt
 
 	authProvider := auth.NewAuthenticationProvider(config)
 	return &authorizationService{config: config,
-		authProvider: authProvider,
-		policyEngine: engine, policyDataService: p}, nil
+		authProvider:      authProvider,
+		policyEngine:      engine,
+		policyDataService: p,
+		messagingService:  m}, nil
 }
 
 func (s *authorizationService) Check(ctx context.Context,
@@ -207,4 +212,10 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 	event.Data.Result.PackageQueryStatus.Message = grpcStatus.Message()
 
 	log.Printf("Event: %v", event)
+
+	topic := s.config.Global.PdpService.Publisher.TopicMappings["policy_audit"]
+	err := s.messagingService.Publish(topic, &event)
+	if err != nil {
+		log.Printf("[ERROR] Failed to publish audit event to topic: %s err: %v", topic, err)
+	}
 }
