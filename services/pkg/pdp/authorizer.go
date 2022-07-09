@@ -17,6 +17,7 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/genproto/googleapis/rpc/code"
 	"google.golang.org/genproto/googleapis/rpc/status"
+	grpc_err_status "google.golang.org/grpc/status"
 
 	event_api "github.com/abhisek/supply-chain-gateway/services/gen"
 )
@@ -63,12 +64,12 @@ func (s *authorizationService) Check(ctx context.Context,
 
 	nctx, ncancel := context.WithTimeout(ctx, 2*time.Second)
 	defer ncancel()
-	vulnerabilities, err := s.policyDataService.GetPackageMetaByVersion(nctx,
+	vulnerabilities, enrichmentErr := s.policyDataService.GetPackageMetaByVersion(nctx,
 		upstreamArtefact.OpenSsfEcosystem(), upstreamArtefact.Group,
 		upstreamArtefact.Name, upstreamArtefact.Version)
 
-	if err != nil {
-		log.Printf("Failed to enrich artefact with vulnerability information: %v", err)
+	if enrichmentErr != nil {
+		log.Printf("Failed to enrich artefact with vulnerability information: %v", enrichmentErr)
 	} else {
 		log.Printf("Enriched artefact (%s/%s/%s) with vulnerabilities: %s",
 			upstreamArtefact.Group, upstreamArtefact.Name, upstreamArtefact.Version,
@@ -90,7 +91,7 @@ func (s *authorizationService) Check(ctx context.Context,
 
 	gatewayDeny := !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed()
 	s.publishDecisionEvent(ctx, !gatewayDeny, s.config.Global.PdpService.MonitorMode,
-		upstream, upstreamArtefact, policyRespose)
+		upstream, upstreamArtefact, policyRespose, enrichmentErr)
 
 	if gatewayDeny {
 		log.Printf("Policy denied upstream request")
@@ -160,7 +161,7 @@ func (s *authorizationService) authenticateForUpstream(ctx context.Context,
 
 func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 	gw_allowed bool, monitor_mode bool, upstream common_models.ArtefactUpStream,
-	artefact common_models.Artefact, result PolicyResponse) {
+	artefact common_models.Artefact, result PolicyResponse, enrichmentErr error) {
 
 	eh := common_models.NewSpecHeaderWithContext(event_api.EventType_PolicyEvaluationAuditEvent, "pdp",
 		&event_api.EventContext{
@@ -183,10 +184,11 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 				Name: upstream.Name,
 			},
 			Result: &event_api.PolicyEvaluationEvent_Data_Result{
-				PolicyAllowed:    result.Allow,
-				EffectiveAllowed: gw_allowed,
-				MonitorMode:      monitor_mode,
-				Violations:       violations,
+				PolicyAllowed:      result.Allow,
+				EffectiveAllowed:   gw_allowed,
+				MonitorMode:        monitor_mode,
+				Violations:         violations,
+				PackageQueryStatus: &event_api.PolicyEvaluationEvent_Data_Result_PackageMetaQueryStatus{},
 			},
 		},
 	}
@@ -198,6 +200,11 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 				Message: v.Message,
 			})
 	}
+
+	// status.FromError takes care of handling non-grpc error as well
+	grpcStatus, _ := grpc_err_status.FromError(enrichmentErr)
+	event.Data.Result.PackageQueryStatus.Code = grpcStatus.Code().String()
+	event.Data.Result.PackageQueryStatus.Message = grpcStatus.Message()
 
 	log.Printf("Event: %v", event)
 }

@@ -49,11 +49,18 @@ message PolicyEvaluationEvent {
         string message = 2;
       }
 
+      message PackageMetaQueryStatus {
+        string code = 1;
+        string message = 2;
+      }
+
       bool policy_allowed = 1;      // Did the policy allow this artifact?
       bool effective_allowed = 2;   // Did the gateway allow this artifact?
       bool monitor_mode = 3;        // The boolean flag for monitor mode config
 
       repeated Violation violations = 4;  // Array of violation
+
+      PackageMetaQueryStatus package_query_status = 5; // Status of package meta query
     }
 
     Result result = 3;
