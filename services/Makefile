@@ -8,7 +8,6 @@ protoc-install:
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install github.com/envoyproxy/protoc-gen-validate@latest
 
-
 oapi-codegen:
 	oapi-codegen -package openssf -generate types ./spec/openssf/osv-api-openapi.yml > ./pkg/common/openssf/osv.types.go
 

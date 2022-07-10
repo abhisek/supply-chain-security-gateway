@@ -8,7 +8,7 @@ import (
 )
 
 func NewUniqueId() string {
-	t := time.Unix(1000000, 0)
+	t := time.Now()
 	entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
 	return ulid.MustNew(ulid.Timestamp(t), entropy).String()
 }

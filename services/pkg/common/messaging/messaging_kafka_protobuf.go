@@ -18,6 +18,9 @@ type kafkaMessagingService struct {
 }
 
 func NewKafkaProtobufMessagingService(bootstrapServers, schemaRegistryUrl string) (MessagingService, error) {
+	log.Printf("Kafka msg service init with bootstrap:%s registry:%s",
+		bootstrapServers, schemaRegistryUrl)
+
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": bootstrapServers})
 	if err != nil {
 		return nil, err
@@ -33,7 +36,7 @@ func NewKafkaProtobufMessagingService(bootstrapServers, schemaRegistryUrl string
 		return nil, err
 	}
 
-	messageDeliveryNotificationChan := make(chan kafka.Event)
+	messageDeliveryNotificationChan := make(chan kafka.Event, 100000)
 	messagingService := &kafkaMessagingService{
 		producer:        producer,
 		serializer:      protobufSerializer,
@@ -46,6 +49,18 @@ func NewKafkaProtobufMessagingService(bootstrapServers, schemaRegistryUrl string
 
 func (svc *kafkaMessagingService) deliveryEventHandler() {
 	log.Printf("Starting Kafka (protobuf) messaging service delivery event handler")
+	for msg := range svc.deliveryChannel {
+		m, ok := msg.(*kafka.Message)
+		if !ok {
+			log.Printf("[ERROR] Failed to cast msg to kafka.Message in delivery channel handler")
+		}
+
+		if m.TopicPartition.Error != nil {
+			log.Printf("Failed to deliver msg: %v", m.TopicPartition.Error)
+		}
+	}
+
+	log.Printf("[ERROR] Kafka msg deliver handler QUIT")
 }
 
 func (svc *kafkaMessagingService) QueueSubscribe(topic string, group string, handler func(msg interface{})) (MessagingQueueSubscription, error) {

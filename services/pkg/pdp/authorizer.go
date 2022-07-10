@@ -214,7 +214,7 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 	log.Printf("Event: %v", event)
 
 	topic := s.config.Global.PdpService.Publisher.TopicMappings["policy_audit"]
-	err := s.messagingService.Publish(topic, &event)
+	err := s.messagingService.Publish(topic, event)
 	if err != nil {
 		log.Printf("[ERROR] Failed to publish audit event to topic: %s err: %v", topic, err)
 	}
