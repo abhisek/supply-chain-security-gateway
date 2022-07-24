@@ -6,6 +6,7 @@ import (
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/pdp"
 	envoy_service_auth_v3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -18,14 +19,17 @@ func main() {
 		log.Fatalf("Failed to load config: %s", err.Error())
 	}
 
-	grpconn, err := common_adapters.GrpcMtlsClient("PDS", os.Getenv("PDS_HOST"),
-		os.Getenv("PDS_HOST"), os.Getenv("PDS_PORT"), []grpc.DialOption{}, func(conn *grpc.ClientConn) {})
+	policyDataService, err := pdp.NewPolicyDataServiceClient(config.Global.PdpService)
 	if err != nil {
-		log.Fatalf("Failed to establish connection with PDS: %v", err)
+		log.Fatalf("Failed to create policy data service client: %v", err)
 	}
 
-	policyDataService := pdp.NewLocalPolicyDataClient(grpconn)
-	authService, err := pdp.NewAuthorizationService(config, policyDataService)
+	messagingService, err := buildMessagingService(config)
+	if err != nil {
+		log.Fatalf("Failed to build messaging service: %v", err)
+	}
+
+	authService, err := pdp.NewAuthorizationService(config, policyDataService, messagingService)
 	if err != nil {
 		log.Fatalf("Failed to create auth service: %s", err.Error())
 	}
@@ -34,4 +38,16 @@ func main() {
 		[]grpc.ServerOption{}, func(s *grpc.Server) {
 			envoy_service_auth_v3.RegisterAuthorizationServer(s, authService)
 		})
+}
+
+func buildMessagingService(config *common_config.Config) (messaging.MessagingService, error) {
+	switch config.Global.PdpService.Publisher.Type {
+	case "kafka-pongo":
+		log.Printf("Using Kafka (pongo) messaging service")
+		return messaging.NewKafkaProtobufMessagingService(os.Getenv("PDP_KAFKA_PONGO_BOOTSTRAP_SERVERS"),
+			os.Getenv("PDP_KAFKA_PONGO_SCHEMA_REGISTRY_URL"))
+	default:
+		log.Printf("Using NATs messaging service")
+		return messaging.NewNatsMessagingService(config)
+	}
 }

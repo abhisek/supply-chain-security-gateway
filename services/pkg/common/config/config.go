@@ -13,6 +13,7 @@ type MessagingConfig struct {
 }
 
 type EventPublisherConfig struct {
+	Type          string            `yaml:"type"`
 	TopicMappings map[string]string `yaml:"topics"`
 }
 
@@ -20,9 +21,17 @@ type TapServiceConfig struct {
 	Publisher EventPublisherConfig `yaml:"publisher"`
 }
 
+type PdsClientConfig struct {
+	Host    string `yaml:"host"`
+	Port    string `yaml:"port"`
+	UseMtls bool   `yaml:"mtls"`
+	Type    string `yaml:"type"`
+}
+
 type PdpServiceConfig struct {
 	MonitorMode bool                 `yaml:"monitor_mode"`
 	Publisher   EventPublisherConfig `yaml:"publisher"`
+	PdsClient   PdsClientConfig      `yaml:"pds_client"`
 }
 
 type DcsServiceConfig struct {

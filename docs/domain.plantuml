@@ -1,0 +1,47 @@
+@startuml Gateway Domain Model
+
+package "Management" {
+  object "Organization" as org
+  object "User" as user
+  object "Access" as adminAccess
+  object "Access Token" as accessToken
+}
+
+package "Operations" {
+  object "Gateway" as gw
+  object "Access Rule" as gwAccessRule
+  object "Upstream" as upstream
+
+  object "Authentication" as authN
+  object "Policy" as policy
+
+  object "Route" as route
+  object "Repository" as repository
+
+  object "Path Pattern" as path
+}
+
+org --> user : 1-n
+org --> gw : 1-n
+
+org --> adminAccess : 1-n
+
+adminAccess <-- user : 1-n
+adminAccess <-- gw : 1-n
+
+gw --> upstream : 1-n
+gw --> policy : 1-n
+gw --> gwAccessRule : 1-n
+
+user --> accessToken : 1-n (Gateway Upstream)
+
+upstream --> route : 1-1
+upstream --> repository : 1-1
+upstream --> policy : 1-n
+route --> policy : 1-n
+
+route --> path : 1-n
+route --> authN : 1-1
+repository --> authN : 1-1
+
+@enduml

@@ -5,7 +5,7 @@ upstreams:
 - name: maven-central
   type: maven2
   authentication:
-    type: basic
+    type: noauth
     provider: gateway-common-auth
   route:
     prefix: /maven2
@@ -48,8 +48,20 @@ tap:
       upstream_response: com.msg.event.upstream.response
 pdp:
   monitor_mode: false
+  pds_client:
+    type: local
+    host: pds
+    port: 9002
+    mtls: true
+    # type: raya
+    # host: 10.100.5.70
+    # port: 50051
+    # mtls: false
   publisher:
+    #type: nats
+    type: kafka-pongo
     topics:
+      policy_audit: eventlogs
       policy_denied: com.msg.event.pdp.policy_denied
 dcs:
   publisher:

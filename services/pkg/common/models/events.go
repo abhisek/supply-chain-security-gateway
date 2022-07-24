@@ -11,6 +11,8 @@ const (
 	DomainEventTypeDeleted = "event.type.deleted"
 )
 
+// LEGACY event: Move to spec based events
+
 type MetaEvent struct {
 	Version string `json:"version"`
 	Type    string `json:"type"`

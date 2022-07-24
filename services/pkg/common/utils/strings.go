@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	"github.com/mitchellh/mapstructure"
 )
@@ -15,6 +16,10 @@ func Introspect(v interface{}) string {
 	} else {
 		return string(bytes)
 	}
+}
+
+func CleanPath(path string) string {
+	return filepath.Clean(path)
 }
 
 func MapStruct[T any](source interface{}, dest *T) error {

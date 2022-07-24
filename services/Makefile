@@ -8,7 +8,6 @@ protoc-install:
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 	go install github.com/envoyproxy/protoc-gen-validate@latest
 
-
 oapi-codegen:
 	oapi-codegen -package openssf -generate types ./spec/openssf/osv-api-openapi.yml > ./pkg/common/openssf/osv.types.go
 
@@ -26,10 +25,28 @@ protoc-codegen:
 	protoc -I ./spec/proto/ \
 		-I ./spec/proto/lib/ -I ./spec/proto/lib/protoc-gen-validate \
 		--go_out=./gen/ \
+		--go-grpc_out=./gen/ \
+		--validate_out="lang=go:./gen/" \
+		--go_opt=paths=source_relative \
+		--go-grpc_opt=paths=source_relative \
+		--validate_opt=paths=source_relative \
+		./spec/proto/raya.proto
+
+	protoc -I ./spec/proto/ \
+		-I ./spec/proto/lib/ -I ./spec/proto/lib/protoc-gen-validate \
+		--go_out=./gen/ \
 		--validate_out="lang=go:./gen/" \
 		--go_opt=paths=source_relative \
 		--validate_opt=paths=source_relative \
 		./spec/proto/models.proto
+
+	protoc -I ./spec/proto/ \
+		-I ./spec/proto/lib/ -I ./spec/proto/lib/protoc-gen-validate \
+		--go_out=./gen/ \
+		--validate_out="lang=go:./gen/" \
+		--go_opt=paths=source_relative \
+		--validate_opt=paths=source_relative \
+		./spec/proto/events.proto
 
 setup:
 	mkdir -p out

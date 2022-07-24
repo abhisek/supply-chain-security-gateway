@@ -13,6 +13,12 @@ message Artefact {
   string version    = 4;
 }
 
+message ArtefactUpstream {
+  string id = 1;    // Unique ID
+  string type = 2;  // The type of the upstream
+  string name = 3;  // User defined name for the upstream
+}
+
 enum VulnerabilitySeverity {
   UNKNOWN_SEVERITY    = 0;
   CRITICAL            = 10;
@@ -20,20 +26,6 @@ enum VulnerabilitySeverity {
   MEDIUM              = 30;
   LOW                 = 40;
   INFO                = 50;
-}
-
-enum SbomFormat {
-  SPDX = 0;
-  CYCLONEDX = 1;
-}
-
-enum LicenseIdentifier {
-  UNKNOWN_LICENSE_ID = 0;
-}
-
-message Sbom {
-  SbomFormat type = 1;
-  LicenseIdentifier licenseId = 2;
 }
 
 message VulnerabilityScore {

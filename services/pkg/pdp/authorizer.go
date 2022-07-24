@@ -9,6 +9,7 @@ import (
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/auth"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	envoy_api_v3_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -17,6 +18,9 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/genproto/googleapis/rpc/code"
 	"google.golang.org/genproto/googleapis/rpc/status"
+	grpc_err_status "google.golang.org/grpc/status"
+
+	event_api "github.com/abhisek/supply-chain-gateway/services/gen"
 )
 
 var (
@@ -28,9 +32,11 @@ type authorizationService struct {
 	authProvider      auth.AuthenticationProvider
 	policyEngine      *PolicyEngine
 	policyDataService PolicyDataClientInterface
+	messagingService  messaging.MessagingService
 }
 
-func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInterface) (envoy_service_auth_v3.AuthorizationServer, error) {
+func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInterface,
+	m messaging.MessagingService) (envoy_service_auth_v3.AuthorizationServer, error) {
 	engine, err := NewPolicyEngine(os.Getenv("PDP_POLICY_PATH"), true)
 	if err != nil {
 		return &authorizationService{}, err
@@ -38,8 +44,10 @@ func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInt
 
 	authProvider := auth.NewAuthenticationProvider(config)
 	return &authorizationService{config: config,
-		authProvider: authProvider,
-		policyEngine: engine, policyDataService: p}, nil
+		authProvider:      authProvider,
+		policyEngine:      engine,
+		policyDataService: p,
+		messagingService:  m}, nil
 }
 
 func (s *authorizationService) Check(ctx context.Context,
@@ -61,12 +69,12 @@ func (s *authorizationService) Check(ctx context.Context,
 
 	nctx, ncancel := context.WithTimeout(ctx, 2*time.Second)
 	defer ncancel()
-	vulnerabilities, err := s.policyDataService.GetPackageMetaByVersion(nctx,
+	vulnerabilities, enrichmentErr := s.policyDataService.GetPackageMetaByVersion(nctx,
 		upstreamArtefact.OpenSsfEcosystem(), upstreamArtefact.Group,
 		upstreamArtefact.Name, upstreamArtefact.Version)
 
-	if err != nil {
-		log.Printf("Failed to enrich artefact with vulnerability information: %v", err)
+	if enrichmentErr != nil {
+		log.Printf("Failed to enrich artefact with vulnerability information: %v", enrichmentErr)
 	} else {
 		log.Printf("Enriched artefact (%s/%s/%s) with vulnerabilities: %s",
 			upstreamArtefact.Group, upstreamArtefact.Name, upstreamArtefact.Version,
@@ -86,7 +94,11 @@ func (s *authorizationService) Check(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	if !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed() {
+	gatewayDeny := !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed()
+	s.publishDecisionEvent(ctx, !gatewayDeny, s.config.Global.PdpService.MonitorMode,
+		upstream, upstreamArtefact, policyRespose, enrichmentErr)
+
+	if gatewayDeny {
 		log.Printf("Policy denied upstream request")
 		return &envoy_service_auth_v3.CheckResponse{}, errPolicyDeniedUpStreamRequest
 	}
@@ -150,4 +162,60 @@ func (s *authorizationService) authenticateForUpstream(ctx context.Context,
 	}
 
 	return identity.Id(), nil
+}
+
+func (s *authorizationService) publishDecisionEvent(ctx context.Context,
+	gw_allowed bool, monitor_mode bool, upstream common_models.ArtefactUpStream,
+	artefact common_models.Artefact, result PolicyResponse, enrichmentErr error) {
+
+	eh := common_models.NewSpecHeaderWithContext(event_api.EventType_PolicyEvaluationAuditEvent, "pdp",
+		&event_api.EventContext{
+			OrgId:     "0",
+			ProjectId: "0",
+		})
+
+	var violations []*event_api.PolicyEvaluationEvent_Data_Result_Violation = make([]*event_api.PolicyEvaluationEvent_Data_Result_Violation, 0)
+	event := &event_api.PolicyEvaluationEvent{
+		Header: eh,
+		Data: &event_api.PolicyEvaluationEvent_Data{
+			Artefact: &event_api.Artefact{
+				Ecosystem: upstream.Type,
+				Group:     artefact.Group,
+				Name:      artefact.Name,
+				Version:   artefact.Version,
+			},
+			Upstream: &event_api.ArtefactUpstream{
+				Type: upstream.Type,
+				Name: upstream.Name,
+			},
+			Result: &event_api.PolicyEvaluationEvent_Data_Result{
+				PolicyAllowed:      result.Allow,
+				EffectiveAllowed:   gw_allowed,
+				MonitorMode:        monitor_mode,
+				Violations:         violations,
+				PackageQueryStatus: &event_api.PolicyEvaluationEvent_Data_Result_PackageMetaQueryStatus{},
+			},
+		},
+	}
+
+	for _, v := range result.Violations {
+		event.Data.Result.Violations = append(event.Data.Result.Violations,
+			&event_api.PolicyEvaluationEvent_Data_Result_Violation{
+				Code:    int32(v.Code),
+				Message: v.Message,
+			})
+	}
+
+	// status.FromError takes care of handling non-grpc error as well
+	grpcStatus, _ := grpc_err_status.FromError(enrichmentErr)
+	event.Data.Result.PackageQueryStatus.Code = grpcStatus.Code().String()
+	event.Data.Result.PackageQueryStatus.Message = grpcStatus.Message()
+
+	log.Printf("Event: %v", event)
+
+	topic := s.config.Global.PdpService.Publisher.TopicMappings["policy_audit"]
+	err := s.messagingService.Publish(topic, event)
+	if err != nil {
+		log.Printf("[ERROR] Failed to publish audit event to topic: %s err: %v", topic, err)
+	}
 }
