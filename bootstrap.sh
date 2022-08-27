@@ -37,9 +37,11 @@ if [ ! -f ".env" ]; then
 # Generate secrets
   mysql_root_pass=$(openssl rand -hex 32)
   cat > .env <<_EOF
-  MYSQL_ROOT_PASSWORD=$mysql_root_pass
-  MYSQL_DCS_DATABASE=vdb
-  MYSQL_DCS_USER=root
-  MYSQL_DCS_PASSWORD=$mysql_root_pass
+MYSQL_ROOT_PASSWORD=$mysql_root_pass
+MYSQL_DCS_DATABASE=vdb
+MYSQL_DCS_USER=root
+MYSQL_DCS_PASSWORD=$mysql_root_pass
+
+KAFKA_PONGO_HOST=127.0.0.1
 _EOF
 fi
