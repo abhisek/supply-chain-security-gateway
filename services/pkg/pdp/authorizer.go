@@ -176,7 +176,8 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 
 	var violations []*event_api.PolicyEvaluationEvent_Data_Result_Violation = make([]*event_api.PolicyEvaluationEvent_Data_Result_Violation, 0)
 	event := &event_api.PolicyEvaluationEvent{
-		Header: eh,
+		Header:    eh,
+		Timestamp: time.Now().UnixMilli(),
 		Data: &event_api.PolicyEvaluationEvent_Data{
 			Artefact: &event_api.Artefact{
 				Ecosystem: upstream.Type,

@@ -55,14 +55,11 @@ func eventTimestamp(ts time.Time) *event_api.EventTimestamp {
 }
 
 func NewSpecEventHeader(tp event_api.EventType, source string) *event_api.EventHeader {
-	timestamp := time.Now()
 	return &event_api.EventHeader{
-		Type:      tp,
-		Source:    source,
-		Id:        eventUid(),
-		Context:   &event_api.EventContext{},
-		CreatedAt: eventTimestamp(timestamp),
-		Timestamp: timestamp.UnixMilli(),
+		Type:    tp,
+		Source:  source,
+		Id:      eventUid(),
+		Context: &event_api.EventContext{},
 	}
 }
 

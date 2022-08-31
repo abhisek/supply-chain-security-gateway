@@ -32,8 +32,9 @@ message EventHeader {
   string source = 3;  // Which service generated this event
 
   EventContext context = 4;
+
+  // Deprecated
   EventTimestamp created_at = 5; // The timestamp of when this event was created
-  int64 timestamp = 6; // The timestamp in unix millis format
 }
 
 // Represents an event when PDP completes a Policy Evaluation
@@ -68,4 +69,5 @@ message PolicyEvaluationEvent {
   }
 
   Data data = 2;
+  int64 timestamp = 3; // The timestamp in unix millis format
 }
