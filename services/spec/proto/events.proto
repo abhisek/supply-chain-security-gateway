@@ -33,6 +33,7 @@ message EventHeader {
 
   EventContext context = 4;
   EventTimestamp created_at = 5; // The timestamp of when this event was created
+  int64 timestamp = 6; // The timestamp in unix millis format
 }
 
 // Represents an event when PDP completes a Policy Evaluation
