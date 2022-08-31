@@ -180,7 +180,7 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 		Timestamp: time.Now().UnixMilli(),
 		Data: &event_api.PolicyEvaluationEvent_Data{
 			Artefact: &event_api.Artefact{
-				Ecosystem: upstream.Type,
+				Ecosystem: artefact.OpenSsfEcosystem(),
 				Group:     artefact.Group,
 				Name:      artefact.Name,
 				Version:   artefact.Version,

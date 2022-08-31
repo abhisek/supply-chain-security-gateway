@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	raya_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
@@ -29,7 +30,7 @@ func (pds *pdsRayaClient) GetPackageMetaByVersion(ctx context.Context,
 	request := &raya_api.PackageVersionMetaQueryRequest{
 		PackageVersion: &raya_api.PackageVersion{
 			Package: &raya_api.Package{
-				Ecosystem: ecosystem,
+				Ecosystem: rayaEcosystemName(ecosystem),
 				Name:      pkgName,
 			},
 			Version: version,
@@ -80,4 +81,8 @@ func (pds *pdsRayaClient) GetPackageMetaByVersion(ctx context.Context,
 	}
 
 	return vulnerabilities, nil
+}
+
+func rayaEcosystemName(name string) string {
+	return strings.ToUpper(name)
 }
