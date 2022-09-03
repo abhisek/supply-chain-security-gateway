@@ -127,7 +127,7 @@ Egress authentication is for upstream repositories, especially the ones that nee
 Use `htpasswd` to add users:
 
 ```bash
-htpasswd -nbB user1 password1 >> ./config/config/gateway-auth-basic
+htpasswd -nbB user1 password1 >> ./config/gateway-auth-basic
 ```
 
 Enable authentication for upstream in `config/global.yml`
