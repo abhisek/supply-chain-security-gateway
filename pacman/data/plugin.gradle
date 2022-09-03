@@ -20,6 +20,24 @@ settingsEvaluated { settings ->
 }
 
 allprojects {
+  buildscript {
+    repositories {
+      maven {
+        authentication {
+          basic(BasicAuthentication)
+        }
+
+        url "{{GATEWAY_MAVEN_CENTRAL_URL}}"
+        credentials {
+          username "{{GATEWAY_USERNAME}}"
+          password "{{GATEWAY_PASSWORD}}"
+        }
+      }
+    }
+  }
+}
+
+allprojects {
   repositories {
     maven {
       authentication {
