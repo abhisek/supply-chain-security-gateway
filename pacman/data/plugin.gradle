@@ -1,0 +1,36 @@
+// https://docs.gradle.org/current/userguide/init_scripts.html
+// TODO: Enforce gateway as the only repository URL
+
+settingsEvaluated { settings ->
+  settings.pluginManagement {
+    repositories {
+      maven {
+        authentication {
+          basic(BasicAuthentication)
+        }
+
+        url "{{GATEWAY_GRADLE_PLUGIN_URL}}"
+        credentials {
+          username "{{GATEWAY_USERNAME}}"
+          password "{{GATEWAY_PASSWORD}}"
+        }
+      }
+    }
+  }
+}
+
+allprojects {
+  repositories {
+    maven {
+      authentication {
+        basic(BasicAuthentication)
+      }
+
+      url "{{GATEWAY_MAVEN_CENTRAL_URL}}"
+      credentials {
+        username "{{GATEWAY_USERNAME}}"
+        password "{{GATEWAY_PASSWORD}}"
+      }
+    }
+  }
+}

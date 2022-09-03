@@ -66,6 +66,7 @@ message PolicyEvaluationEvent {
     }
 
     Result result = 3;
+    string username = 4;
   }
 
   Data data = 2;

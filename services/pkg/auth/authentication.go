@@ -26,6 +26,7 @@ const (
 	AuthTypeBasic  = "basic"
 	AuthTypeOIDC   = "oidc"
 
+	AuthIdentityTypeAnonymous = "Anonymous"
 	AuthIdentityTypeBasicAuth = "BasicAuth"
 )
 

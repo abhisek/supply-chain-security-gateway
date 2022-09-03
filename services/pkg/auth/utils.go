@@ -32,3 +32,8 @@ func (a *authIdentity) Id() string {
 func (a *authIdentity) Name() string {
 	return a.name
 }
+
+func AnonymousIdentity() AuthenticatedIdentity {
+	return NewAuthIdentity(AuthIdentityTypeAnonymous,
+		"anonymous", "Anonymous Identity")
+}

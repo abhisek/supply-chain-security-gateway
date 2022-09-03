@@ -61,7 +61,7 @@ func (s *authorizationService) Check(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	userId, err := s.authenticateForUpstream(ctx, upstream, httpReq)
+	identity, err := s.authenticateForUpstream(ctx, upstream, httpReq)
 	if err != nil {
 		log.Printf("Error resolving userId: %v", err)
 		return &envoy_service_auth_v3.CheckResponse{}, err
@@ -82,7 +82,7 @@ func (s *authorizationService) Check(ctx context.Context,
 	}
 
 	log.Printf("Authorizing upstream req from %s: [%s/%s/%s/%s][%s] %s",
-		userId,
+		identity.Id(),
 		upstreamArtefact.Source.Type,
 		upstreamArtefact.Group,
 		upstreamArtefact.Name, upstreamArtefact.Version,
@@ -95,7 +95,8 @@ func (s *authorizationService) Check(ctx context.Context,
 	}
 
 	gatewayDeny := !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed()
-	s.publishDecisionEvent(ctx, !gatewayDeny, s.config.Global.PdpService.MonitorMode,
+	s.publishDecisionEvent(ctx, identity.Id(), !gatewayDeny,
+		s.config.Global.PdpService.MonitorMode,
 		upstream, upstreamArtefact, policyRespose, enrichmentErr)
 
 	if gatewayDeny {
@@ -142,29 +143,29 @@ func (s *authorizationService) resolveRequestedArtefact(req *envoy_service_auth_
 // This helps us identify who is accessing the artefact so that violations can be attributed
 func (s *authorizationService) authenticateForUpstream(ctx context.Context,
 	upstream common_models.ArtefactUpStream,
-	req *envoy_service_auth_v3.AttributeContext_HttpRequest) (string, error) {
+	req *envoy_service_auth_v3.AttributeContext_HttpRequest) (auth.AuthenticatedIdentity, error) {
 	if !upstream.NeedAuthentication() {
-		return "anonymous-upstream", nil
+		return auth.AnonymousIdentity(), nil
 	}
 
 	if req.Method == "HEAD" {
-		return "anonymous-head", nil
+		return auth.AnonymousIdentity(), nil
 	}
 
 	authService, err := s.authProvider.IngressAuthService(upstream)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	identity, err := authService.Authenticate(ctx, auth.NewEnvoyIngressAuthAdapter(req))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return identity.Id(), nil
+	return identity, nil
 }
 
-func (s *authorizationService) publishDecisionEvent(ctx context.Context,
+func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId string,
 	gw_allowed bool, monitor_mode bool, upstream common_models.ArtefactUpStream,
 	artefact common_models.Artefact, result PolicyResponse, enrichmentErr error) {
 
@@ -196,6 +197,7 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context,
 				Violations:         violations,
 				PackageQueryStatus: &event_api.PolicyEvaluationEvent_Data_Result_PackageMetaQueryStatus{},
 			},
+			Username: userId,
 		},
 	}
 

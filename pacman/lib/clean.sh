@@ -1,0 +1,1 @@
+rm -rf "$HOME/$GRADLE_INIT_SCRIPT_PATH"
