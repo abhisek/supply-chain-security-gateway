@@ -18,8 +18,13 @@ const (
 	pdsClientTypeRaya  = "raya"
 )
 
+type PolicyDataServiceResponse struct {
+	Vulnerabilities []common_models.ArtefactVulnerability `json:"vulnerabilities"`
+	Licenses        []common_models.ArtefactLicense       `json:"licenses"`
+}
+
 type PolicyDataClientInterface interface {
-	GetPackageMetaByVersion(ctx context.Context, ecosystem, group, name, version string) ([]common_models.ArtefactVulnerability, error)
+	GetPackageMetaByVersion(ctx context.Context, ecosystem, group, name, version string) (PolicyDataServiceResponse, error)
 }
 
 func NewPolicyDataServiceClient(cfg common_config.PdpServiceConfig) (PolicyDataClientInterface, error) {

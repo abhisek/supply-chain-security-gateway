@@ -9,6 +9,7 @@ import (
 
 	raya_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/openssf"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 )
 
@@ -17,11 +18,10 @@ type pdsRayaClient struct {
 }
 
 func (pds *pdsRayaClient) GetPackageMetaByVersion(ctx context.Context,
-	ecosystem, group, name, version string) ([]common_models.ArtefactVulnerability, error) {
-	vulnerabilities := []common_models.ArtefactVulnerability{}
+	ecosystem, group, name, version string) (PolicyDataServiceResponse, error) {
 	pkgName := ""
 
-	if !utils.IsEmptyString(group) {
+	if !utils.IsEmptyString(group) && ecosystem == openssf.VulnerabilityEcosystemMaven {
 		pkgName = fmt.Sprintf("%s:%s", group, name)
 	} else {
 		pkgName = name
@@ -41,7 +41,7 @@ func (pds *pdsRayaClient) GetPackageMetaByVersion(ctx context.Context,
 
 	response, err := pds.client.GetPackageMetaByVersion(ctx, request)
 	if err != nil {
-		return vulnerabilities, err
+		return PolicyDataServiceResponse{}, err
 	}
 
 	severityMapper := func(s raya_api.Severity) string {
@@ -59,12 +59,13 @@ func (pds *pdsRayaClient) GetPackageMetaByVersion(ctx context.Context,
 		}
 	}
 
+	pdsResponse := PolicyDataServiceResponse{}
 	for _, adv := range response.Advisories {
 		if adv == nil {
 			continue
 		}
 
-		vulnerabilities = append(vulnerabilities, common_models.ArtefactVulnerability{
+		pdsResponse.Vulnerabilities = append(pdsResponse.Vulnerabilities, common_models.ArtefactVulnerability{
 			Id: common_models.ArtefactVulnerabilityId{
 				Source: adv.Source,
 				Id:     adv.SourceId,
@@ -80,7 +81,15 @@ func (pds *pdsRayaClient) GetPackageMetaByVersion(ctx context.Context,
 		})
 	}
 
-	return vulnerabilities, nil
+	for _, license := range response.Licenses {
+		pdsResponse.Licenses = append(pdsResponse.Licenses, common_models.ArtefactLicense{
+			Type: common_models.ArtefactLicenseTypeSpdx,
+			Id:   license,
+			Name: license,
+		})
+	}
+
+	return pdsResponse, nil
 }
 
 func rayaEcosystemName(name string) string {

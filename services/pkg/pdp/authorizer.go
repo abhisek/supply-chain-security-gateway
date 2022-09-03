@@ -69,16 +69,16 @@ func (s *authorizationService) Check(ctx context.Context,
 
 	nctx, ncancel := context.WithTimeout(ctx, 2*time.Second)
 	defer ncancel()
-	vulnerabilities, enrichmentErr := s.policyDataService.GetPackageMetaByVersion(nctx,
+	pdsResponse, enrichmentErr := s.policyDataService.GetPackageMetaByVersion(nctx,
 		upstreamArtefact.OpenSsfEcosystem(), upstreamArtefact.Group,
 		upstreamArtefact.Name, upstreamArtefact.Version)
 
 	if enrichmentErr != nil {
 		log.Printf("Failed to enrich artefact with vulnerability information: %v", enrichmentErr)
 	} else {
-		log.Printf("Enriched artefact (%s/%s/%s) with vulnerabilities: %s",
+		log.Printf("Enriched artefact (%s/%s/%s) with data: %s",
 			upstreamArtefact.Group, upstreamArtefact.Name, upstreamArtefact.Version,
-			utils.Introspect(vulnerabilities))
+			utils.Introspect(pdsResponse))
 	}
 
 	log.Printf("Authorizing upstream req from %s: [%s/%s/%s/%s][%s] %s",
@@ -88,14 +88,15 @@ func (s *authorizationService) Check(ctx context.Context,
 		upstreamArtefact.Name, upstreamArtefact.Version,
 		httpReq.Method, httpReq.Path)
 
-	policyRespose, err := s.policyEngine.Evaluate(ctx, NewPolicyInput(upstreamArtefact, upstream, vulnerabilities))
+	policyRespose, err := s.policyEngine.Evaluate(ctx,
+		NewPolicyInput(upstreamArtefact, upstream, pdsResponse.Vulnerabilities, pdsResponse.Licenses))
 	if err != nil {
 		log.Printf("Failed to evaluate policy: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
 	gatewayDeny := !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed()
-	s.publishDecisionEvent(ctx, identity.Id(), !gatewayDeny,
+	s.publishDecisionEvent(ctx, identity.Id(), pdsResponse, !gatewayDeny,
 		s.config.Global.PdpService.MonitorMode,
 		upstream, upstreamArtefact, policyRespose, enrichmentErr)
 
@@ -165,7 +166,9 @@ func (s *authorizationService) authenticateForUpstream(ctx context.Context,
 	return identity, nil
 }
 
+// TODO - Refactor from using N args to using a builder
 func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId string,
+	pdsResponse PolicyDataServiceResponse,
 	gw_allowed bool, monitor_mode bool, upstream common_models.ArtefactUpStream,
 	artefact common_models.Artefact, result PolicyResponse, enrichmentErr error) {
 
@@ -197,8 +200,23 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId 
 				Violations:         violations,
 				PackageQueryStatus: &event_api.PolicyEvaluationEvent_Data_Result_PackageMetaQueryStatus{},
 			},
-			Username: userId,
+			Username:    userId,
+			Enrichments: &event_api.PolicyEvaluationEvent_Data_ArtefactEnrichments{},
 		},
+	}
+
+	for _, v := range pdsResponse.Licenses {
+		event.Data.Enrichments.Licenses = append(event.Data.Enrichments.Licenses, v.Id)
+	}
+
+	for _, v := range pdsResponse.Vulnerabilities {
+		event.Data.Enrichments.Advisories = append(event.Data.Enrichments.Advisories,
+			&event_api.PolicyEvaluationEvent_Data_ArtefactEnrichments_ArtefactAdvisory{
+				Source:   v.Id.Source,
+				SourceId: v.Id.Id,
+				Title:    v.Name,
+				Severity: v.Severity,
+			})
 	}
 
 	for _, v := range result.Violations {

@@ -45,6 +45,18 @@ message PolicyEvaluationEvent {
     Artefact artefact = 1;  // Included from models.proto
     ArtefactUpstream upstream = 2;  // Included from models.proto
 
+    message ArtefactEnrichments {
+      message ArtefactAdvisory {
+        string source = 1;
+        string source_id = 2;
+        string severity = 3;
+        string title = 4;
+      }
+
+      repeated string licenses = 1;
+      repeated ArtefactAdvisory advisories = 2;
+    }
+
     message Result {
       message Violation {
         int32 code = 1;
@@ -66,7 +78,12 @@ message PolicyEvaluationEvent {
     }
 
     Result result = 3;
+
     string username = 4;
+
+    // Include other enriched metadata
+    // This should be ideally moved to data layer
+    ArtefactEnrichments enrichments = 5;
   }
 
   Data data = 2;

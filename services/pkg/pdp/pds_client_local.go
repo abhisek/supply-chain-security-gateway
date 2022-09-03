@@ -12,7 +12,7 @@ type pdsLocalImplementation struct {
 }
 
 func (pds *pdsLocalImplementation) GetPackageMetaByVersion(ctx context.Context,
-	ecosystem, group, name, version string) ([]common_models.ArtefactVulnerability, error) {
+	ecosystem, group, name, version string) (PolicyDataServiceResponse, error) {
 	resp, err := pds.client.FindVulnerabilitiesByArtefact(ctx, &pds_api.FindVulnerabilityByArtefactRequest{
 		Artefact: &pds_api.Artefact{
 			Ecosystem: ecosystem,
@@ -23,10 +23,12 @@ func (pds *pdsLocalImplementation) GetPackageMetaByVersion(ctx context.Context,
 	})
 
 	if err != nil {
-		return []common_models.ArtefactVulnerability{}, err
+		return PolicyDataServiceResponse{}, err
 	}
 
-	return pds.mapVulnerabilities(resp.Vulnerabilities), nil
+	return PolicyDataServiceResponse{
+		Vulnerabilities: pds.mapVulnerabilities(resp.Vulnerabilities),
+	}, nil
 }
 
 func (pds *pdsLocalImplementation) mapVulnerabilities(src []*pds_api.VulnerabilityMeta) []common_models.ArtefactVulnerability {
