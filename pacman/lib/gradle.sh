@@ -9,8 +9,6 @@ function setupGradle() {
   gatewayPluginPortalURL="$gatewayURL$GRADLE_PLUGINS_ROUTE"
   gatewayMavenCentralURL="$gatewayURL$MAVEN_CENTRAL_ROUTE"
 
-  echo sed "s/{{GATEWAY_USERNAME}}/$username/"
-
   mkdir -p `dirname $gradleScriptDst` 2>/dev/null
   cat $gradleScriptSrc | \
     sed "s,{{GATEWAY_USERNAME}},$username," | \

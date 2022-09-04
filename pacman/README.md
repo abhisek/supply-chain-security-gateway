@@ -19,6 +19,14 @@ export GATEWAY_PASSWORD="<Your-Gateway-Password>"
 ./pacman.sh setup-gradle
 ```
 
+### Configure Maven
+
+```bash
+./pacman.sh setup-maven
+```
+
+> **Note:** This script overwrite `$HOME/.m2/settings.xml`
+
 ## Cleanup
 
 Remove any configuration file added by `pacman`

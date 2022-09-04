@@ -60,6 +60,10 @@ function main() {
       validateRunningEnv
       loadScript "gradle"
       ;;
+    setup-maven)
+      validateRunningEnv
+      loadScript "maven"
+      ;;
     clean)
       loadScript "clean"
       ;;

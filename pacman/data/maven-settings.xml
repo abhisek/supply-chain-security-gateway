@@ -1,0 +1,42 @@
+<settings>
+    <server>
+        <id>security-gateway</id>
+        <username>{{GATEWAY_USERNAME}}</username>
+        <password>{{GATEWAY_PASSWORD}}</password>
+    </server>
+
+    <mirrors>
+        <mirror>
+            <id>security-gateway</id>
+            <mirrorOf>*</mirrorOf>
+            <url>{{GATEWAY_MAVEN_CENTRAL_URL}}</url>
+        </mirror>
+    </mirrors>
+
+    <profiles>
+        <profile>
+            <id>security-gateway</id>
+            <repositories>
+                <repository>
+                <id>central</id>
+                <url>http://central</url>
+                <releases><enabled>true</enabled></releases>
+                <snapshots><enabled>true</enabled></snapshots>
+                </repository>
+            </repositories>
+
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>central</id>
+                    <url>http://central</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>security-gateway</activeProfile>
+    </activeProfiles>
+</settings>
