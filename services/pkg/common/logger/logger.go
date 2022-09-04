@@ -14,15 +14,21 @@ var (
 // Common config helps in logging consistency across all services
 // in an environment
 func Init(svc string) {
-	config := zap.NewProductionConfig()
-
-	l, err := config.Build()
+	l, err := zapBuild(zapConfig())
 	if err != nil {
 		panic("Failed to build logger")
 	}
 
 	defaultLogger = l.With(zap.String("service", svc))
 	sugarLogger = defaultLogger.Sugar()
+}
+
+func zapConfig() zap.Config {
+	return zap.NewProductionConfig()
+}
+
+func zapBuild(config zap.Config) (*zap.Logger, error) {
+	return config.Build()
 }
 
 func Infof(msg string, args ...any) {

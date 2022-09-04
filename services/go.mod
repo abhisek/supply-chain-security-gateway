@@ -14,6 +14,7 @@ require (
 	github.com/oklog/ulid/v2 v2.0.2
 	github.com/open-policy-agent/opa v0.39.0
 	github.com/stretchr/testify v1.8.0
+	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	golang.org/x/net v0.0.0-20220418201149-a630d4f3e7a2
 	google.golang.org/genproto v0.0.0-20220503193339-ba3ae3f07e29
@@ -51,7 +52,6 @@ require (
 	github.com/yashtewari/glob-intersection v0.1.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
