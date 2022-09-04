@@ -10,7 +10,7 @@ function setupMaven() {
   mkdir -p `dirname $mavenScriptDst` 2>/dev/null
 
   if [ -f "$mavenScriptDst" ]; then
-    echo "[WARN] Overwriting $mavenScriptDst"
+    warn_msg "Overwriting $mavenScriptDst"
   fi;
 
   cat $mavenScriptSrc | \

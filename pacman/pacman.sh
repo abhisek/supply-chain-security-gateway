@@ -16,6 +16,7 @@ function print_usage() {
   printf "Usage: $0 [arguments]\n"
   printf "\n"
   printf "Arguments:\n"
+  printf "\t configure\n"
   printf "\t setup-gradle\n"
   printf "\t setup-maven\n"
   printf "\t clean\n"
@@ -47,15 +48,19 @@ function validateRunningEnv() {
 function main() {
   loadScript "utils"
   loadScript "conventions"
+  loadScript "configuration"
 
   command=$1
-
   if [ -z "$command" ]; then
     print_usage
     exit -1
   fi;
 
+  loadConfigurationIfPresent
   case $command in
+    configure)
+      interactiveConfiguration
+      ;;
     setup-gradle)
       validateRunningEnv
       loadScript "gradle"

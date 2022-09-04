@@ -1,9 +1,11 @@
 <settings>
-    <server>
-        <id>security-gateway</id>
-        <username>{{GATEWAY_USERNAME}}</username>
-        <password>{{GATEWAY_PASSWORD}}</password>
-    </server>
+    <servers>
+        <server>
+            <id>security-gateway</id>
+            <username>{{GATEWAY_USERNAME}}</username>
+            <password>{{GATEWAY_PASSWORD}}</password>
+        </server>
+    </servers>
 
     <mirrors>
         <mirror>
