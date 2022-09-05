@@ -53,13 +53,8 @@ pdp:
     host: pds
     port: 9002
     mtls: true
-    # type: raya
-    # host: 10.100.5.70
-    # port: 50051
-    # mtls: false
   publisher:
-    #type: nats
-    type: kafka-pongo
+    type: nats
     topics:
       policy_audit: eventlogs
       policy_denied: com.msg.event.pdp.policy_denied
