@@ -64,7 +64,7 @@ func (s *authorizationService) Check(ctx context.Context,
 	identity, err := s.authenticateForUpstream(ctx, upstream, httpReq)
 	if err != nil {
 		log.Printf("Error resolving userId: %v", err)
-		return &envoy_service_auth_v3.CheckResponse{}, err
+		return s.authenticationChallenge(ctx, upstream, httpReq)
 	}
 
 	nctx, ncancel := context.WithTimeout(ctx, 2*time.Second)
@@ -137,33 +137,6 @@ func (s *authorizationService) resolveRequestedArtefact(req *envoy_service_auth_
 	return common_models.Artefact{},
 		common_models.ArtefactUpStream{},
 		errors.New("failed to resolve artefact from upstream config")
-}
-
-// POC implementation of extracting UserId from basic auth header. Auth needs to be a
-// service of its own with pluggable IDP support e.g. Github OIDC Token as password
-// This helps us identify who is accessing the artefact so that violations can be attributed
-func (s *authorizationService) authenticateForUpstream(ctx context.Context,
-	upstream common_models.ArtefactUpStream,
-	req *envoy_service_auth_v3.AttributeContext_HttpRequest) (auth.AuthenticatedIdentity, error) {
-	if !upstream.NeedAuthentication() {
-		return auth.AnonymousIdentity(), nil
-	}
-
-	if req.Method == "HEAD" {
-		return auth.AnonymousIdentity(), nil
-	}
-
-	authService, err := s.authProvider.IngressAuthService(upstream)
-	if err != nil {
-		return nil, err
-	}
-
-	identity, err := authService.Authenticate(ctx, auth.NewEnvoyIngressAuthAdapter(req))
-	if err != nil {
-		return nil, err
-	}
-
-	return identity, nil
 }
 
 // TODO - Refactor from using N args to using a builder

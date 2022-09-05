@@ -20,10 +20,10 @@
             <id>security-gateway</id>
             <repositories>
                 <repository>
-                <id>central</id>
-                <url>http://central</url>
-                <releases><enabled>true</enabled></releases>
-                <snapshots><enabled>true</enabled></snapshots>
+                    <id>central</id>
+                    <url>http://central</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>true</enabled></snapshots>
                 </repository>
             </repositories>
 
