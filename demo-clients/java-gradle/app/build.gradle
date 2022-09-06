@@ -26,8 +26,8 @@ repositories {
                 basic(BasicAuthentication)
             }
 
-            username "github.com/octocat/hello-world"
-            password "GithubOidcToken"
+            username "someUser"
+            password "somePassword"
         }
     }
 }

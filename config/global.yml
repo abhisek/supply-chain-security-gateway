@@ -5,7 +5,7 @@ upstreams:
 - name: maven-central
   type: maven2
   authentication:
-    type: basic
+    type: noauth
     provider: gateway-common-auth
   route:
     prefix: /maven2
@@ -18,7 +18,7 @@ upstreams:
 - name: gradle-plugins
   type: maven2
   authentication:
-    type: basic
+    type: noauth
     provider: gateway-common-auth
   route:
     prefix: /gradle-plugins/m2
