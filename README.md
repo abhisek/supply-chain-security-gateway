@@ -7,6 +7,8 @@ A reference architecture and **<ins>proof of concept implementation</ins>** of a
   - [Architecture](#architecture)
     - [Data Plane Flow](#data-plane-flow)
   - [Usage](#usage)
+    - [Configuring Upstream and Routes](#configuring-upstream-and-routes)
+    - [Configuring Environments](#configuring-environments)
     - [Authentication](#authentication)
       - [Ingress Authentication](#ingress-authentication)
         - [Basic Authentication](#basic-authentication)
@@ -106,6 +108,21 @@ If you are developing on any of the service and want to force re-create the cont
 ```bash
 docker-compose up --force-recreate --remove-orphans --build -d
 ```
+
+### Configuring Upstream and Routes
+
+The configuration plane is currently half baked. It needs a tool and a single source of truth to generate configuration for Envoy and Gateway. For now, look at:
+
+1. `config/global.yml`
+2. `config/envoy.yml`
+
+> The route definitions in `envoy.yml` must match the path patterns in `global.yml`
+
+### Configuring Environments
+
+To use the gateway in a CI or developer local environment, package managers need to be configured to use the gateway URL and credentials as repository.
+
+[PacMan](pacman/README.md) makes it easy to automatically configure an environment to use the gateway for downloading 3rd party dependencies.
 
 ### Authentication
 
