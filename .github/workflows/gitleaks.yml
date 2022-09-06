@@ -1,19 +1,16 @@
-name: Run Gitleaks
+name: Secrets Scan
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
 jobs:
-  gitleaks:
+  trufflehog:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
         with:
           fetch-depth: '0'
-      - name: Run Gitleaks
-        uses: zricethezav/gitleaks-action@master
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
 
