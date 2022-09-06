@@ -1,4 +1,4 @@
-@startuml Gateway Domain Model
+@startuml
 
 package "Management" {
   object "Organization" as org
