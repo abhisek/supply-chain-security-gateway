@@ -3,8 +3,9 @@ package models
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"strings"
+
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 )
 
 var (
@@ -47,13 +48,13 @@ func (s ArtefactUpStream) MatchHost(host string) bool {
 }
 
 func (s ArtefactUpStream) MatchPath(path string) bool {
-	path = filepath.Clean(path)
+	path = utils.CleanPath(path)
 	return strings.HasPrefix(path, s.RoutingRule.Prefix)
 }
 
 // Resolve an HTTP request path for this artefact into an Artefact model
 func (s ArtefactUpStream) Path2Artefact(path string) (Artefact, error) {
-	path = filepath.Clean(path)
+	path = utils.CleanPath(path)
 	if !strings.HasPrefix(path, s.RoutingRule.Prefix) {
 		return Artefact{}, errIncorrectPrefix
 	}

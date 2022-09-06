@@ -4,7 +4,7 @@ services:
     image: envoyproxy/envoy:v1.21.1
     command: envoy -c /config/envoy.yml
     volumes:
-      - ./config/envoy.yml:/config/envoy.yml
+      - ${BOOTSTRAP_ENVOY_FILE:-./config/envoy.yml}:/config/envoy.yml
     ports:
       - "10000:10000"
   mysql-server:
@@ -28,8 +28,8 @@ services:
     build: ./services
     command: pdp-server
     volumes:
-      - ./config/gateway-auth-basic:/auth/basic-auth-credentials
-      - ./config/global.yml:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
+      - ${BOOTSTRAP_BASIC_AUTH_FILE:-./config/gateway-auth-basic}:/auth/basic-auth-credentials
       - ./policies:/policies
       - ./pki/pdp/server.crt:/config/pki/server.crt
       - ./pki/pdp/server.key:/config/pki/server.key
@@ -42,11 +42,15 @@ services:
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
       PDS_HOST: pds
       PDS_PORT: 9002
+      PDP_KAFKA_PONGO_BOOTSTRAP_SERVERS: kafka1-host:9092
+      PDP_KAFKA_PONGO_SCHEMA_REGISTRY_URL: http://kafka1-host:8081
+    extra_hosts:
+      kafka1-host: ${KAFKA_PONGO_HOST}
   tap:
     build: ./services
     command: tap-server
     volumes:
-      - ./config/global.yml:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
       - ./pki/tap/server.crt:/config/pki/server.crt
       - ./pki/tap/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
@@ -61,7 +65,7 @@ services:
     build: ./services
     command: dcs-server
     volumes:
-      - ./config/global.yml:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
       - ./pki/dcs/server.crt:/config/pki/server.crt
       - ./pki/dcs/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
@@ -82,7 +86,7 @@ services:
     build: ./services
     command: pds-server
     volumes:
-      - ./config/global.yml:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
       - ./pki/pds/server.crt:/config/pki/server.crt
       - ./pki/pds/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt

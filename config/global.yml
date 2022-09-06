@@ -5,7 +5,7 @@ upstreams:
 - name: maven-central
   type: maven2
   authentication:
-    type: basic
+    type: noauth
     provider: gateway-common-auth
   route:
     prefix: /maven2
@@ -18,7 +18,7 @@ upstreams:
 - name: gradle-plugins
   type: maven2
   authentication:
-    type: basic
+    type: noauth
     provider: gateway-common-auth
   route:
     prefix: /gradle-plugins/m2
@@ -48,8 +48,15 @@ tap:
       upstream_response: com.msg.event.upstream.response
 pdp:
   monitor_mode: false
+  pds_client:
+    type: local
+    host: pds
+    port: 9002
+    mtls: true
   publisher:
+    type: nats
     topics:
+      policy_audit: eventlogs
       policy_denied: com.msg.event.pdp.policy_denied
 dcs:
   publisher:

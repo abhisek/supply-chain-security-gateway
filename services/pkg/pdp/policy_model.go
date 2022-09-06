@@ -24,6 +24,10 @@ type PolicyEvalTargetVulnerability struct {
 	common_models.ArtefactVulnerability
 }
 
+type PolicyEvalTargetLicense struct {
+	common_models.ArtefactLicense
+}
+
 type PolicyInputVersion struct {
 	Major int8 `json:"major"`
 	Minor int8 `json:"minor"`
@@ -34,6 +38,7 @@ type PolicyInputTarget struct {
 	Artefact        PolicyEvalTargetArtefact        `json:"artefact"`
 	Upstream        PolicyEvalTargetUpstream        `json:"upstream"`
 	Vulnerabilities []PolicyEvalTargetVulnerability `json:"vulnerabilities"`
+	Licenses        []PolicyEvalTargetLicense       `json:"licenses"`
 }
 
 type PolicyInput struct {

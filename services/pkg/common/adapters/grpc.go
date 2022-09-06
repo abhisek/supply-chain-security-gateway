@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -15,6 +16,11 @@ import (
 
 type GrpcAdapterConfigurer func(server *grpc.Server)
 type GrpcClientConfigurer func(conn *grpc.ClientConn)
+
+var (
+	NoGrpcDialOptions = []grpc.DialOption{}
+	NoGrpcConfigurer  = func(conn *grpc.ClientConn) {}
+)
 
 func GrpcStreamValidatorInterceptor() grpc.ServerOption {
 	return grpc.StreamInterceptor(
@@ -62,16 +68,22 @@ func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configu
 }
 
 func GrpcMtlsClient(name, serverName, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
-	tc, err := GrpcTransportCredentials(serverName)
+	tc, err := grpcTransportCredentials(serverName)
 	if err != nil {
 		return nil, err
 	}
 
 	dopts = append(dopts, tc)
-	return GrpcClient(name, host, port, dopts, configurer)
+	return grpcClient(name, host, port, dopts, configurer)
 }
 
-func GrpcClient(name, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
+func GrpcInsecureClient(name, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
+	tc := grpc.WithTransportCredentials(insecure.NewCredentials())
+	dopts = append(dopts, tc)
+	return grpcClient(name, host, port, dopts, configurer)
+}
+
+func grpcClient(name, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
 	log.Printf("[%s] Connecting to gRPC server %s:%s", name, host, port)
 
 	retry := 5
@@ -93,7 +105,7 @@ func GrpcClient(name, host, port string, dopts []grpc.DialOption, configurer Grp
 	return conn, nil
 }
 
-func GrpcTransportCredentials(serverName string) (grpc.DialOption, error) {
+func grpcTransportCredentials(serverName string) (grpc.DialOption, error) {
 	tlsConfig, err := utils.TlsConfigFromEnvironment(serverName)
 	if err != nil {
 		return nil, err

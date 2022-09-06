@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/abhisek/supply-chain-gateway/services/gen";
+
+import "models.proto";
+
+// Align with
+// https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/timestamp.proto
+message EventTimestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
+
+// Use this for all contextual metadata
+message EventContext {
+  string org_id = 1;      // 0 indicate unsegmented
+  string project_id = 2;  // 0 indicate unsegmented
+}
+
+// Enumeration of all Event Types
+enum EventType {
+  ErrorNoSuchEvent = 0;
+  PolicyEvaluationAuditEvent = 1;
+}
+
+// Event header and metadata
+message EventHeader {
+  EventType type = 1;    // Type of the event
+  string id = 2;      // Unique event ID
+  string source = 3;  // Which service generated this event
+
+  EventContext context = 4;
+
+  // Deprecated
+  EventTimestamp created_at = 5; // The timestamp of when this event was created
+}
+
+// Represents an event when PDP completes a Policy Evaluation
+message PolicyEvaluationEvent {
+  EventHeader header = 1;
+
+  message Data {
+    Artefact artefact = 1;  // Included from models.proto
+    ArtefactUpstream upstream = 2;  // Included from models.proto
+
+    message ArtefactEnrichments {
+      message ArtefactAdvisory {
+        string source = 1;
+        string source_id = 2;
+        string severity = 3;
+        string title = 4;
+      }
+
+      repeated string licenses = 1;
+      repeated ArtefactAdvisory advisories = 2;
+    }
+
+    message Result {
+      message Violation {
+        int32 code = 1;
+        string message = 2;
+      }
+
+      message PackageMetaQueryStatus {
+        string code = 1;
+        string message = 2;
+      }
+
+      bool policy_allowed = 1;      // Did the policy allow this artifact?
+      bool effective_allowed = 2;   // Did the gateway allow this artifact?
+      bool monitor_mode = 3;        // The boolean flag for monitor mode config
+
+      repeated Violation violations = 4;  // Array of violation
+
+      PackageMetaQueryStatus package_query_status = 5; // Status of package meta query
+    }
+
+    Result result = 3;
+
+    string username = 4;
+
+    // Include other enriched metadata
+    // This should be ideally moved to data layer
+    ArtefactEnrichments enrichments = 5;
+  }
+
+  Data data = 2;
+  int64 timestamp = 3; // The timestamp in unix millis format
+}

@@ -7,10 +7,17 @@ option go_package = "github.com/abhisek/supply-chain-gateway/services/gen";
 import "validate/validate.proto";
 
 message Artefact {
-  string ecosystem  = 1;
+  // https://ossf.github.io/osv-schema/#affectedpackage-field
+  string ecosystem  = 1;  // Ecosystem name aligned with OpenSSF schema
   string group      = 2;
   string name       = 3;
   string version    = 4;
+}
+
+message ArtefactUpstream {
+  string id = 1;    // Unique ID
+  string type = 2;  // The type of the upstream
+  string name = 3;  // User defined name for the upstream
 }
 
 enum VulnerabilitySeverity {
@@ -20,20 +27,6 @@ enum VulnerabilitySeverity {
   MEDIUM              = 30;
   LOW                 = 40;
   INFO                = 50;
-}
-
-enum SbomFormat {
-  SPDX = 0;
-  CYCLONEDX = 1;
-}
-
-enum LicenseIdentifier {
-  UNKNOWN_LICENSE_ID = 0;
-}
-
-message Sbom {
-  SbomFormat type = 1;
-  LicenseIdentifier licenseId = 2;
 }
 
 message VulnerabilityScore {
