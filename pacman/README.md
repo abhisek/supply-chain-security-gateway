@@ -5,10 +5,10 @@ Utility to configure build tools to use security gateway as package repository.
 
 ## Setup
 
+Run `pacman` configuration wizard
+
 ```bash
-export GATEWAY_URL="https://<Your-Gateway-Base-URL>"
-export GATEWAY_USERNAME="<Your-Gateway-Username>"
-export GATEWAY_PASSWORD="<Your-Gateway-Password>"
+./pacman.sh configure
 ```
 
 > Refer to [gateway authentication]([../README.md#authentication)) for more details on how to create gateway users.
