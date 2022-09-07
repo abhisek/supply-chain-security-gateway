@@ -4,6 +4,22 @@
             <id>security-gateway</id>
             <username>{{GATEWAY_USERNAME}}</username>
             <password>{{GATEWAY_PASSWORD}}</password>
+            <configurations>
+                <httpHeaders>
+                    <property>
+                        <name>X-SGW-Project-Id</name>
+                        <value>${project.name}</value>
+                    </property>
+                    <property>
+                        <name>X-SGW-Project-Env</name>
+                        <value>${env.SGW_PROJECT_ENV}</value>
+                    </property>
+                    <property>
+                        <name>X-SGW-Project-Labels</name>
+                        <value>${env.SGW_PROJECT_ENV}</value>
+                    </property>
+                </httpHeaders>
+            </configurations>
         </server>
     </servers>
 
