@@ -11,6 +11,7 @@ import "validate/validate.proto";
 // Aligning the ecosystem with OSV schema
 // https://ossf.github.io/osv-schema/#affectedpackage-field
 enum GatewayUpstreamType {
+  InvalidUpStreamType = 0;
   Maven = 100;
   Npm = 200;
   PyPI = 300;
@@ -20,13 +21,20 @@ enum GatewayUpstreamType {
 
 // To allow default upstreams to be attached
 enum GatewayUpstreamManagementType {
+  InvalidManagementType = 0;
   EnvironmentAdmin = 100;
   GatewayAdmin = 200;
 }
 
 enum GatewayAuthenticationType {
+  InvalidAuthType = 0;
   NoAuth = 100;
   Basic = 200;
+}
+
+enum GatewaySecretSource {
+  InvalidSecretSource = 0;
+  Environment = 100;
 }
 
 message GatewayAuthenticationProvider {
@@ -64,7 +72,23 @@ message GatewayUpstream {
   GatewayUpstreamRepository repository = 6;
 }
 
+message GatewayAuthenticatorBasicAuth {
+  map<string, string> credentials = 1;
+}
+
+message GatewayAuthenticator {
+  GatewayAuthenticationType type = 1;
+  GatewayAuthenticatorBasicAuth basic_auth = 2;
+}
+
+message GatewaySecret {
+  GatewaySecretSource source = 1;
+  string key = 2;
+}
+
 message GatewayConfiguration {
   GatewayInfo info = 1;
   repeated GatewayUpstream upstreams = 2;
+  map<string, GatewayAuthenticator> authenticators = 3;
+  map<string, GatewaySecret> secrets = 4;
 }
