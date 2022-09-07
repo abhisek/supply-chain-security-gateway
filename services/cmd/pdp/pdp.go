@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/pdp"
@@ -14,24 +14,26 @@ import (
 )
 
 func main() {
+	logger.Init("pdp")
+
 	config, err := common_config.LoadGlobal("")
 	if err != nil {
-		log.Fatalf("Failed to load config: %s", err.Error())
+		logger.Fatalf("Failed to load config: %s", err.Error())
 	}
 
 	policyDataService, err := pdp.NewPolicyDataServiceClient(config.Global.PdpService)
 	if err != nil {
-		log.Fatalf("Failed to create policy data service client: %v", err)
+		logger.Fatalf("Failed to create policy data service client: %v", err)
 	}
 
 	messagingService, err := buildMessagingService(config)
 	if err != nil {
-		log.Fatalf("Failed to build messaging service: %v", err)
+		logger.Fatalf("Failed to build messaging service: %v", err)
 	}
 
 	authService, err := pdp.NewAuthorizationService(config, policyDataService, messagingService)
 	if err != nil {
-		log.Fatalf("Failed to create auth service: %s", err.Error())
+		logger.Fatalf("Failed to create auth service: %s", err.Error())
 	}
 
 	common_adapters.StartGrpcServer("PDP", "0.0.0.0", "9000",
@@ -43,11 +45,11 @@ func main() {
 func buildMessagingService(config *common_config.Config) (messaging.MessagingService, error) {
 	switch config.Global.PdpService.Publisher.Type {
 	case "kafka-pongo":
-		log.Printf("Using Kafka (pongo) messaging service")
+		logger.Infof("Using Kafka (pongo) messaging service")
 		return messaging.NewKafkaProtobufMessagingService(os.Getenv("PDP_KAFKA_PONGO_BOOTSTRAP_SERVERS"),
 			os.Getenv("PDP_KAFKA_PONGO_SCHEMA_REGISTRY_URL"))
 	default:
-		log.Printf("Using NATs messaging service")
+		logger.Infof("Using NATs messaging service")
 		return messaging.NewNatsMessagingService(config)
 	}
 }

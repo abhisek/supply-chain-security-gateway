@@ -1,19 +1,22 @@
 package pdp
 
-import common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+import (
+	"github.com/abhisek/supply-chain-gateway/services/pkg/auth"
+	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+)
 
 func NewPolicyInput(target common_models.Artefact,
 	upstream common_models.ArtefactUpStream,
-	vulnerabilities []common_models.ArtefactVulnerability,
-	licenses []common_models.ArtefactLicense) PolicyInput {
+	requester auth.AuthenticatedIdentity,
+	enrichments PolicyDataServiceResponse) PolicyInput {
 
 	vulns := []PolicyEvalTargetVulnerability{}
-	for _, v := range vulnerabilities {
+	for _, v := range enrichments.Vulnerabilities {
 		vulns = append(vulns, PolicyEvalTargetVulnerability{v})
 	}
 
 	lics := []PolicyEvalTargetLicense{}
-	for _, l := range licenses {
+	for _, l := range enrichments.Licenses {
 		lics = append(lics, PolicyEvalTargetLicense{l})
 	}
 
@@ -29,6 +32,9 @@ func NewPolicyInput(target common_models.Artefact,
 			Upstream:        PolicyEvalTargetUpstream{upstream},
 			Vulnerabilities: vulns,
 			Licenses:        lics,
+		},
+		Principal: PolicyInputPrincipal{
+			Id: requester.Id(),
 		},
 	}
 }

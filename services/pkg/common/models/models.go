@@ -81,10 +81,8 @@ type ArtefactLicense struct {
 }
 
 type Artefact struct {
-	Source          ArtefactSource          `json:"source"`
-	Group           string                  `json:"group"`
-	Name            string                  `json:"name"`
-	Version         string                  `json:"version"`
-	Vulnerabilities []ArtefactVulnerability `json:"vulnerabilities"`
-	Licenses        []ArtefactLicense       `json:"licenses"`
+	Source  ArtefactSource `json:"source"`
+	Group   string         `json:"group"`
+	Name    string         `json:"name"`
+	Version string         `json:"version"`
 }

@@ -95,3 +95,24 @@ test_pass_on_low_vuln {
   result := violations with input as input
   count(result) = 0
 }
+
+test_fail_private_namespace {
+  input := {
+    "kind": "PolicyInput",
+    "version": { "major": 1, "minor": 0, "patch": 0 },
+    "target": {
+      "artefact": {
+        "source": { "type": "maven2" },
+        "group": "org.example.private.lib",
+        "name": "random",
+        "version": "1.33.7",
+      },
+      "vulnerabilities": [
+        { "severity": "LOW" }
+      ]
+    }
+  }
+
+  result := violations with input as input
+  count(result) = 1
+}

@@ -3,12 +3,12 @@ package pdp
 import (
 	"context"
 	"errors"
-	"log"
 	"os"
 	"time"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/auth"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
@@ -57,13 +57,13 @@ func (s *authorizationService) Check(ctx context.Context,
 
 	upstreamArtefact, upstream, err := s.resolveRequestedArtefact(httpReq)
 	if err != nil {
-		log.Printf("No artefact resolved: %s", err.Error())
+		logger.Infof("No artefact resolved: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
 	identity, err := s.authenticateForUpstream(ctx, upstream, httpReq)
 	if err != nil {
-		log.Printf("Error resolving userId: %v", err)
+		logger.Infof("Error resolving userId: %v", err)
 		return s.authenticationChallenge(ctx, upstream, httpReq)
 	}
 
@@ -74,14 +74,14 @@ func (s *authorizationService) Check(ctx context.Context,
 		upstreamArtefact.Name, upstreamArtefact.Version)
 
 	if enrichmentErr != nil {
-		log.Printf("Failed to enrich artefact with vulnerability information: %v", enrichmentErr)
+		logger.Infof("Failed to enrich artefact with vulnerability information: %v", enrichmentErr)
 	} else {
-		log.Printf("Enriched artefact (%s/%s/%s) with data: %s",
+		logger.Infof("Enriched artefact (%s/%s/%s) with data: %s",
 			upstreamArtefact.Group, upstreamArtefact.Name, upstreamArtefact.Version,
 			utils.Introspect(pdsResponse))
 	}
 
-	log.Printf("Authorizing upstream req from %s: [%s/%s/%s/%s][%s] %s",
+	logger.Infof("Authorizing upstream req from %s: [%s/%s/%s/%s][%s] %s",
 		identity.Id(),
 		upstreamArtefact.Source.Type,
 		upstreamArtefact.Group,
@@ -89,9 +89,9 @@ func (s *authorizationService) Check(ctx context.Context,
 		httpReq.Method, httpReq.Path)
 
 	policyRespose, err := s.policyEngine.Evaluate(ctx,
-		NewPolicyInput(upstreamArtefact, upstream, pdsResponse.Vulnerabilities, pdsResponse.Licenses))
+		NewPolicyInput(upstreamArtefact, upstream, identity, pdsResponse))
 	if err != nil {
-		log.Printf("Failed to evaluate policy: %s", err.Error())
+		logger.Infof("Failed to evaluate policy: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
@@ -101,7 +101,7 @@ func (s *authorizationService) Check(ctx context.Context,
 		upstream, upstreamArtefact, policyRespose, enrichmentErr)
 
 	if gatewayDeny {
-		log.Printf("Policy denied upstream request")
+		logger.Infof("Policy denied upstream request")
 		return &envoy_service_auth_v3.CheckResponse{}, errPolicyDeniedUpStreamRequest
 	}
 
@@ -205,11 +205,11 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId 
 	event.Data.Result.PackageQueryStatus.Code = grpcStatus.Code().String()
 	event.Data.Result.PackageQueryStatus.Message = grpcStatus.Message()
 
-	log.Printf("Event: %v", event)
+	logger.Infof("Event: %v", event)
 
 	topic := s.config.Global.PdpService.Publisher.TopicMappings["policy_audit"]
 	err := s.messagingService.Publish(topic, event)
 	if err != nil {
-		log.Printf("[ERROR] Failed to publish audit event to topic: %s err: %v", topic, err)
+		logger.Infof("[ERROR] Failed to publish audit event to topic: %s err: %v", topic, err)
 	}
 }
