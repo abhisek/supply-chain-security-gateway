@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/abhisek/supply-chain-gateway/services/gen";
+
+import "validate/validate.proto";
+
+// Proto3 lacks string enums.
+// The upstream type is used by PDP to construct artifact struct
+// by parsing the path name as per ecosystem convention
+// Aligning the ecosystem with OSV schema
+// https://ossf.github.io/osv-schema/#affectedpackage-field
+enum GatewayUpstreamType {
+  Maven = 100;
+  Npm = 200;
+  PyPI = 300;
+  RubyGems = 400;
+  Go = 500;
+}
+
+// To allow default upstreams to be attached
+enum GatewayUpstreamManagementType {
+  EnvironmentAdmin = 100;
+  GatewayAdmin = 200;
+}
+
+enum GatewayAuthenticationType {
+  NoAuth = 100;
+  Basic = 200;
+}
+
+message GatewayAuthenticationProvider {
+  GatewayAuthenticationType type = 1;
+  string provider = 2;
+}
+
+// Route matching algorithm to decide the order of matching
+message GatewayUpstreamRoute {
+  string host = 1;
+  string path_prefix = 2;
+  string path_pattern = 3;
+}
+
+message GatewayUpstreamRepository {
+  string host = 1;
+  string port = 2;
+  bool tls = 3;
+  string sni = 4;
+  GatewayAuthenticationProvider authentication = 5;
+}
+
+message GatewayInfo {
+  string id = 1;
+  string name = 2;
+  string domain = 3;
+}
+
+message GatewayUpstream {
+  GatewayUpstreamType type = 1;
+  GatewayUpstreamManagementType management_type = 2;
+  string name = 3;
+  GatewayAuthenticationProvider authentication = 4;
+  GatewayUpstreamRoute route = 5;
+  GatewayUpstreamRepository repository = 6;
+}
+
+message GatewayConfiguration {
+  GatewayInfo info = 1;
+  repeated GatewayUpstream upstreams = 2;
+}
