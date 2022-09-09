@@ -11,6 +11,8 @@ services:
     image: mysql:8.0
     volumes:
       - mysql-db:/var/lib/mysql
+    deploy:
+      replicas: ${MYSQL_REPLICA_COUNT:-1}
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
@@ -63,6 +65,8 @@ services:
     depends_on:
       - mysql-server
     build: ./services
+    deploy:
+      replicas: ${DCS_REPLICA_COUNT:-1}
     command: dcs-server
     volumes:
       - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
@@ -84,6 +88,8 @@ services:
       - mysql-server
       - dcs
     build: ./services
+    deploy:
+      replicas: ${PDS_REPLICA_COUNT:-1}
     command: pds-server
     volumes:
       - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml

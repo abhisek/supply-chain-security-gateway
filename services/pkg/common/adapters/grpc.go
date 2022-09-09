@@ -12,6 +12,9 @@ import (
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	grpcotel "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 )
 
 type GrpcAdapterConfigurer func(server *grpc.Server)
@@ -58,6 +61,9 @@ func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configu
 		log.Fatalf("Failed to listen on %s:%s - %s", host, port, err.Error())
 	}
 
+	sopts = append(sopts, grpc.UnaryInterceptor(grpcotel.UnaryServerInterceptor()))
+	sopts = append(sopts, grpc.StreamInterceptor(grpcotel.StreamServerInterceptor()))
+
 	server := grpc.NewServer(sopts...)
 	configure(server)
 
@@ -85,6 +91,9 @@ func GrpcInsecureClient(name, host, port string, dopts []grpc.DialOption, config
 
 func grpcClient(name, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
 	log.Printf("[%s] Connecting to gRPC server %s:%s", name, host, port)
+
+	dopts = append(dopts, grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()))
+	dopts = append(dopts, grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()))
 
 	retry := 5
 	t := 1
