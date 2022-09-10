@@ -16,6 +16,8 @@ require (
 	github.com/stretchr/testify v1.8.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.34.0
 	go.opentelemetry.io/otel v1.9.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.6.1
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.6.1
 	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	golang.org/x/net v0.0.0-20220418201149-a630d4f3e7a2
@@ -33,6 +35,7 @@ require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5 // indirect
 	github.com/cactus/go-statsd-client/statsd v0.0.0-20200423205355-cb0885a1018c // indirect
+	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -41,6 +44,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/jhump/protoreflect v1.12.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.4 // indirect
@@ -54,7 +58,10 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/yashtewari/glob-intersection v0.1.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.6.1 // indirect
+	go.opentelemetry.io/otel/sdk v1.6.1 // indirect
 	go.opentelemetry.io/otel/trace v1.9.0 // indirect
+	go.opentelemetry.io/proto/otlp v0.12.1 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect

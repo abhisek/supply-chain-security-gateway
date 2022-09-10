@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/obs"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/pdp"
 	envoy_service_auth_v3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -15,6 +17,9 @@ import (
 
 func main() {
 	logger.Init("pdp")
+
+	tracerShutDown := obs.InitTracing()
+	defer tracerShutDown(context.Background())
 
 	config, err := common_config.LoadGlobal("")
 	if err != nil {
