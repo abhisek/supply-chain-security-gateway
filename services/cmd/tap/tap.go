@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/obs"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/tap"
 
 	envoy_v3_ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
@@ -14,6 +17,11 @@ import (
 )
 
 func main() {
+	logger.Init("tap")
+
+	tracerShutDown := obs.InitTracing()
+	defer tracerShutDown(context.Background())
+
 	config, err := common_config.LoadGlobal("")
 	if err != nil {
 		log.Fatalf("Failed to load config: %s", err.Error())

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"strconv"
@@ -9,6 +10,8 @@ import (
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/obs"
 	"google.golang.org/grpc"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db"
@@ -17,6 +20,11 @@ import (
 )
 
 func main() {
+	logger.Init("dcs")
+
+	tracerShutDown := obs.InitTracing()
+	defer tracerShutDown(context.Background())
+
 	config, err := common_config.LoadGlobal("")
 	if err != nil {
 		log.Fatalf("Failed to load config: %s", err.Error())
@@ -50,9 +58,7 @@ func main() {
 	}
 
 	common_adapters.StartGrpcMtlsServer("PDS", os.Getenv("PDS_SERVER_NAME"), "0.0.0.0", "9002",
-		[]grpc.ServerOption{grpc.MaxConcurrentStreams(5000),
-			common_adapters.GrpcStreamValidatorInterceptor(),
-			common_adapters.GrpcUnaryValidatorInterceptor()}, func(s *grpc.Server) {
+		[]grpc.ServerOption{grpc.MaxConcurrentStreams(5000)}, func(s *grpc.Server) {
 			api.RegisterPolicyDataServiceServer(s, pdService)
 		})
 }

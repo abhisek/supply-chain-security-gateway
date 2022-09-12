@@ -25,22 +25,6 @@ var (
 	NoGrpcConfigurer  = func(conn *grpc.ClientConn) {}
 )
 
-func GrpcStreamValidatorInterceptor() grpc.ServerOption {
-	return grpc.StreamInterceptor(
-		grpc_middleware.ChainStreamServer(
-			grpc_validator.StreamServerInterceptor(),
-		),
-	)
-}
-
-func GrpcUnaryValidatorInterceptor() grpc.ServerOption {
-	return grpc.UnaryInterceptor(
-		grpc_middleware.ChainUnaryServer(
-			grpc_validator.UnaryServerInterceptor(),
-		),
-	)
-}
-
 func StartGrpcMtlsServer(name, serverName, host, port string, sopts []grpc.ServerOption, configure GrpcAdapterConfigurer) {
 	tc, err := utils.TlsConfigFromEnvironment(serverName)
 	if err != nil {
@@ -61,8 +45,19 @@ func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configu
 		log.Fatalf("Failed to listen on %s:%s - %s", host, port, err.Error())
 	}
 
-	sopts = append(sopts, grpc.UnaryInterceptor(grpcotel.UnaryServerInterceptor()))
-	sopts = append(sopts, grpc.StreamInterceptor(grpcotel.StreamServerInterceptor()))
+	sopts = append(sopts, grpc.UnaryInterceptor(
+		grpc_middleware.ChainUnaryServer(
+			grpcotel.UnaryServerInterceptor(),
+			grpc_validator.UnaryServerInterceptor(),
+		),
+	))
+
+	sopts = append(sopts, grpc.StreamInterceptor(
+		grpc_middleware.ChainStreamServer(
+			grpcotel.StreamServerInterceptor(),
+			grpc_validator.StreamServerInterceptor(),
+		),
+	))
 
 	server := grpc.NewServer(sopts...)
 	configure(server)

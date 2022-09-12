@@ -65,6 +65,10 @@ services:
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
+      APP_SERVICE_OBS_ENABLED: ${TAP_SERVICE_OBS_ENABLED:-true}
+      APP_SERVICE_NAME: ${TAP_SERVICE_NAME:-tap}
+      APP_SERVICE_ENV: ${TAP_SERVICE_ENV:-development}
+      APP_OTEL_EXPORTER_OTLP_ENDPOINT: ${COMMON_OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
   dcs:
     depends_on:
       - mysql-server
@@ -87,6 +91,10 @@ services:
       MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
       MYSQL_USER: ${MYSQL_DCS_USER}
       MYSQL_PASSWORD: ${MYSQL_DCS_PASSWORD}
+      APP_SERVICE_OBS_ENABLED: ${DCS_SERVICE_OBS_ENABLED:-true}
+      APP_SERVICE_NAME: ${DCS_SERVICE_NAME:-dcs}
+      APP_SERVICE_ENV: ${DCS_SERVICE_ENV:-development}
+      APP_OTEL_EXPORTER_OTLP_ENDPOINT: ${COMMON_OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
   pds:
     depends_on:
       - mysql-server
@@ -111,5 +119,9 @@ services:
       MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
       MYSQL_USER: ${MYSQL_DCS_USER}
       MYSQL_PASSWORD: ${MYSQL_DCS_PASSWORD}
+      APP_SERVICE_OBS_ENABLED: ${PDS_SERVICE_OBS_ENABLED:-true}
+      APP_SERVICE_NAME: ${PDS_SERVICE_NAME:-pds}
+      APP_SERVICE_ENV: ${PDS_SERVICE_ENV:-development}
+      APP_OTEL_EXPORTER_OTLP_ENDPOINT: ${COMMON_OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
 volumes:
   mysql-db: {}

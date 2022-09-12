@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"strconv"
@@ -8,11 +9,18 @@ import (
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db/adapters"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/obs"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/dcs"
 )
 
 func main() {
+	logger.Init("dcs")
+
+	tracerShutDown := obs.InitTracing()
+	defer tracerShutDown(context.Background())
+
 	config, err := common_config.LoadGlobal("")
 	if err != nil {
 		log.Fatalf("Failed to load config: %s", err.Error())

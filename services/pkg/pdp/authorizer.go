@@ -11,6 +11,7 @@ import (
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/obs"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	envoy_api_v3_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_service_auth_v3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -67,11 +68,15 @@ func (s *authorizationService) Check(ctx context.Context,
 		return s.authenticationChallenge(ctx, upstream, httpReq)
 	}
 
-	nctx, ncancel := context.WithTimeout(ctx, 2*time.Second)
-	defer ncancel()
-	pdsResponse, enrichmentErr := s.policyDataService.GetPackageMetaByVersion(nctx,
-		upstreamArtefact.OpenSsfEcosystem(), upstreamArtefact.Group,
-		upstreamArtefact.Name, upstreamArtefact.Version)
+	var pdsResponse PolicyDataServiceResponse
+	var enrichmentErr error
+
+	obs.Spanned(ctx, "pdsQuery", func(ctx context.Context) error {
+		pdsResponse, enrichmentErr = s.policyDataService.GetPackageMetaByVersion(ctx,
+			upstreamArtefact.OpenSsfEcosystem(), upstreamArtefact.Group,
+			upstreamArtefact.Name, upstreamArtefact.Version)
+		return enrichmentErr
+	})
 
 	if enrichmentErr != nil {
 		logger.Infof("Failed to enrich artefact with vulnerability information: %v", enrichmentErr)
@@ -88,8 +93,13 @@ func (s *authorizationService) Check(ctx context.Context,
 		upstreamArtefact.Name, upstreamArtefact.Version,
 		httpReq.Method, httpReq.Path)
 
-	policyRespose, err := s.policyEngine.Evaluate(ctx,
-		NewPolicyInput(upstreamArtefact, upstream, identity, pdsResponse))
+	var policyRespose PolicyResponse
+	obs.Spanned(ctx, "policyEvaluation", func(ctx context.Context) error {
+		policyRespose, err = s.policyEngine.Evaluate(ctx,
+			NewPolicyInput(upstreamArtefact, upstream, identity, pdsResponse))
+		return err
+	})
+
 	if err != nil {
 		logger.Infof("Failed to evaluate policy: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
