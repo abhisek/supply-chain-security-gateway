@@ -16,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -108,6 +109,19 @@ func Spanned(current context.Context, name string,
 	}
 
 	return err
+}
+
+func LoggerTags(ctx context.Context) map[string]any {
+	tags := map[string]any{}
+	span := trace.SpanFromContext(ctx)
+
+	if span.IsRecording() {
+		tags["span_id"] = span.SpanContext().SpanID()
+		tags["trace_id"] = span.SpanContext().TraceID()
+		tags["trace_flags"] = span.SpanContext().TraceFlags()
+	}
+
+	return tags
 }
 
 func isTracingEnabled() bool {

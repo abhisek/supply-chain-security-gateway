@@ -54,6 +54,7 @@ func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInt
 func (s *authorizationService) Check(ctx context.Context,
 	req *envoy_service_auth_v3.CheckRequest) (*envoy_service_auth_v3.CheckResponse, error) {
 
+	logger := logger.With(obs.LoggerTags(ctx))
 	httpReq := req.Attributes.Request.Http
 
 	upstreamArtefact, upstream, err := s.resolveRequestedArtefact(httpReq)
@@ -155,6 +156,7 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId 
 	gw_allowed bool, monitor_mode bool, upstream common_models.ArtefactUpStream,
 	artefact common_models.Artefact, result PolicyResponse, enrichmentErr error) {
 
+	logger := logger.With(obs.LoggerTags(ctx))
 	eh := common_models.NewSpecHeaderWithContext(event_api.EventType_PolicyEvaluationAuditEvent, "pdp",
 		&event_api.EventContext{
 			OrgId:     "0",
@@ -215,7 +217,7 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId 
 	event.Data.Result.PackageQueryStatus.Code = grpcStatus.Code().String()
 	event.Data.Result.PackageQueryStatus.Message = grpcStatus.Message()
 
-	logger.Infof("Event: %v", event)
+	logger.With("event", event).Info("Event published")
 
 	topic := s.config.Global.PdpService.Publisher.TopicMappings["policy_audit"]
 	err := s.messagingService.Publish(topic, event)
