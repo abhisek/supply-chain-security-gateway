@@ -52,7 +52,12 @@ func (s *tapService) Process(srv envoy_v3_ext_proc_pb.ExternalProcessor_ProcessS
 			err = s.handleRequestHeaders(ctx,
 				req.Request.(*envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders))
 
-			resp.Response = &envoy_v3_ext_proc_pb.ProcessingResponse_RequestHeaders{}
+			resp.Response = &envoy_v3_ext_proc_pb.ProcessingResponse_RequestHeaders{
+				RequestHeaders: &envoy_v3_ext_proc_pb.HeadersResponse{
+					Response: &envoy_v3_ext_proc_pb.CommonResponse{},
+				},
+			}
+
 			err = s.applyUpstreamAuth(req.Request.(*envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders),
 				resp.Response.(*envoy_v3_ext_proc_pb.ProcessingResponse_RequestHeaders))
 			break
