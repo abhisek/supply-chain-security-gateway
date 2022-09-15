@@ -53,6 +53,19 @@ func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInt
 
 func (s *authorizationService) Check(ctx context.Context,
 	req *envoy_service_auth_v3.CheckRequest) (*envoy_service_auth_v3.CheckResponse, error) {
+	var response *envoy_service_auth_v3.CheckResponse
+	var err error
+
+	obs.Spanned(ctx, "checkInternal", func(ctx context.Context) error {
+		response, err = s.checkInternal(ctx, req)
+		return err
+	})
+
+	return response, err
+}
+
+func (s *authorizationService) checkInternal(ctx context.Context,
+	req *envoy_service_auth_v3.CheckRequest) (*envoy_service_auth_v3.CheckResponse, error) {
 
 	logger := logger.With(obs.LoggerTags(ctx))
 	httpReq := req.Attributes.Request.Http
