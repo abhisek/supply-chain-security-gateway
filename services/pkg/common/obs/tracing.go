@@ -111,6 +111,14 @@ func Spanned(current context.Context, name string,
 	return err
 }
 
+func SetSpanAttribute(ctx context.Context, key string, value string) {
+	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(attribute.KeyValue{
+		Key:   attribute.Key(key),
+		Value: attribute.StringValue(value),
+	})
+}
+
 func LoggerTags(ctx context.Context) map[string]any {
 	tags := map[string]any{}
 	span := trace.SpanFromContext(ctx)
