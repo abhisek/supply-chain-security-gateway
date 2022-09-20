@@ -72,8 +72,17 @@ message GatewayUpstream {
   GatewayUpstreamRepository repository = 6;
 }
 
+// Credentials should NOT be plain text
+// but interpreted as htpasswd bcrypt encrypted
+// https://httpd.apache.org/docs/2.4/programs/htpasswd.html
 message GatewayAuthenticatorBasicAuth {
   map<string, string> credentials = 1;
+
+  // Load from file source
+  // This can be a local file or an object storage path such as S3
+  // depending on the capability of the repository loading
+  // the configuration data
+  string path = 2;
 }
 
 message GatewayAuthenticator {
