@@ -56,11 +56,6 @@ func main() {
 	flag.Parse()
 	logger.Init("confli")
 
-	if utils.IsEmptyString(fileRepoPath) {
-		flag.Usage()
-		os.Exit(-1)
-	}
-
 	ch := commandsTable[command]
 	if ch == nil {
 		logger.Fatalf("Unknown command: %s", command)
@@ -70,6 +65,11 @@ func main() {
 }
 
 func validateConfigCommand() error {
+	if utils.IsEmptyString(fileRepoPath) {
+		flag.Usage()
+		os.Exit(-1)
+	}
+
 	_, err := config.NewConfigFileRepository(fileRepoPath)
 	if err != nil {
 		logger.Fatalf("Failed to create config repo: %v", err)

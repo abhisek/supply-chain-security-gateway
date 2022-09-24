@@ -65,7 +65,7 @@ func (s *sampleConfigGenerator) addDefaultGatewayAuth(gateway *config_api.Gatewa
 		ingressGatewayBasicAuthenticatorName: {
 			Type: config_api.GatewayAuthenticationType_Basic,
 			BasicAuth: &config_api.GatewayAuthenticatorBasicAuth{
-				Path: "data/default-basic-auth",
+				Path: "data/default-basic-auth.txt",
 			},
 		},
 	}
