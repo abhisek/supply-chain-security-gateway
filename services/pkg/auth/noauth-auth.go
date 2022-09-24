@@ -9,5 +9,5 @@ func NewIngressNoAuthService() (IngressAuthenticationService, error) {
 }
 
 func (p *noAuthProvider) Authenticate(ctx context.Context, cp AuthenticationCredentialProvider) (AuthenticatedIdentity, error) {
-	return NewAuthIdentity("", "No Auth", "No Auth"), nil
+	return AnonymousIdentity(), nil
 }

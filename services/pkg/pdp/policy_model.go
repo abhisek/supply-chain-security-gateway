@@ -35,7 +35,9 @@ type PolicyInputVersion struct {
 }
 
 type PolicyInputPrincipal struct {
-	Id string `json:"id"`
+	UserId    string `json:"userId"`
+	OrgId     string `json:"orgId"`
+	ProjectId string `json:"projectId"`
 }
 
 type PolicyInputTarget struct {

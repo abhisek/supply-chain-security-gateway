@@ -70,22 +70,30 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 	logger := logger.With(obs.LoggerTags(ctx))
 	httpReq := req.Attributes.Request.Http
 
+	exCtx := ExtendContext(ctx)
+	exCtx.WithEnvoyCheckRequest(req)
+	exCtx.WithLogger(logger)
+
 	upstreamArtefact, upstream, err := s.resolveRequestedArtefact(httpReq)
 	if err != nil {
 		logger.Infof("No artefact resolved: %s", err.Error())
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	identity, err := s.authenticateForUpstream(ctx, upstream, httpReq)
+	identity, err := s.authenticateForUpstream(exCtx, upstream, httpReq)
 	if err != nil {
 		logger.Infof("Error resolving userId: %v", err)
-		return s.authenticationChallenge(ctx, upstream, httpReq)
+		return s.authenticationChallenge(exCtx, upstream, httpReq)
 	}
+
+	exCtx.WithArtefact(upstreamArtefact)
+	exCtx.WithUpstream(upstream)
+	exCtx.WithAuthIdentity(identity)
 
 	var pdsResponse PolicyDataServiceResponse
 	var enrichmentErr error
 
-	obs.Spanned(ctx, "pdsQuery", func(ctx context.Context) error {
+	obs.Spanned(exCtx, "pdsQuery", func(ctx context.Context) error {
 		pdsResponse, enrichmentErr = s.policyDataService.GetPackageMetaByVersion(ctx,
 			upstreamArtefact.OpenSsfEcosystem(), upstreamArtefact.Group,
 			upstreamArtefact.Name, upstreamArtefact.Version)
@@ -101,14 +109,14 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 	}
 
 	logger.Infof("Authorizing upstream req from %s: [%s/%s/%s/%s][%s] %s",
-		identity.Id(),
+		identity.UserId(),
 		upstreamArtefact.Source.Type,
 		upstreamArtefact.Group,
 		upstreamArtefact.Name, upstreamArtefact.Version,
 		httpReq.Method, httpReq.Path)
 
 	var policyRespose PolicyResponse
-	obs.Spanned(ctx, "policyEvaluation", func(ctx context.Context) error {
+	obs.Spanned(exCtx, "policyEvaluation", func(ctx context.Context) error {
 		policyRespose, err = s.policyEngine.Evaluate(ctx,
 			NewPolicyInput(upstreamArtefact, upstream, identity, pdsResponse))
 		return err
@@ -120,9 +128,8 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 	}
 
 	gatewayDeny := !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed()
-	s.publishDecisionEvent(ctx, identity.Id(), pdsResponse, !gatewayDeny,
-		s.config.Global.PdpService.MonitorMode,
-		upstream, upstreamArtefact, policyRespose, enrichmentErr)
+	s.publishDecisionEvent(exCtx, pdsResponse, !gatewayDeny,
+		s.config.Global.PdpService.MonitorMode, policyRespose, enrichmentErr)
 
 	if gatewayDeny {
 		logger.Infof("Policy denied upstream request")
@@ -164,16 +171,17 @@ func (s *authorizationService) resolveRequestedArtefact(req *envoy_service_auth_
 }
 
 // TODO - Refactor from using N args to using a builder
-func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId string,
+func (s *authorizationService) publishDecisionEvent(ctx *extendedContext,
 	pdsResponse PolicyDataServiceResponse,
-	gw_allowed bool, monitor_mode bool, upstream common_models.ArtefactUpStream,
-	artefact common_models.Artefact, result PolicyResponse, enrichmentErr error) {
+	gw_allowed bool, monitor_mode bool, result PolicyResponse, enrichmentErr error) {
 
 	logger := logger.With(obs.LoggerTags(ctx))
 	eh := common_models.NewSpecHeaderWithContext(event_api.EventType_PolicyEvaluationAuditEvent, "pdp",
 		&event_api.EventContext{
-			OrgId:     "0",
-			ProjectId: "0",
+			GatewayDomain: ctx.GatewayDomain(),
+			EnvDomain:     ctx.EnvironmentDomain(),
+			OrgId:         ctx.OrgId(),
+			ProjectId:     ctx.ProjectId(),
 		})
 
 	var violations []*event_api.PolicyEvaluationEvent_Data_Result_Violation = make([]*event_api.PolicyEvaluationEvent_Data_Result_Violation, 0)
@@ -182,14 +190,14 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId 
 		Timestamp: time.Now().UnixMilli(),
 		Data: &event_api.PolicyEvaluationEvent_Data{
 			Artefact: &event_api.Artefact{
-				Ecosystem: artefact.OpenSsfEcosystem(),
-				Group:     artefact.Group,
-				Name:      artefact.Name,
-				Version:   artefact.Version,
+				Ecosystem: ctx.Artefact().OpenSsfEcosystem(),
+				Group:     ctx.Artefact().Group,
+				Name:      ctx.Artefact().Name,
+				Version:   ctx.Artefact().Version,
 			},
 			Upstream: &event_api.ArtefactUpstream{
-				Type: upstream.Type,
-				Name: upstream.Name,
+				Type: ctx.Upstream().Type,
+				Name: ctx.Upstream().Name,
 			},
 			Result: &event_api.PolicyEvaluationEvent_Data_Result{
 				PolicyAllowed:      result.Allow,
@@ -198,7 +206,7 @@ func (s *authorizationService) publishDecisionEvent(ctx context.Context, userId 
 				Violations:         violations,
 				PackageQueryStatus: &event_api.PolicyEvaluationEvent_Data_Result_PackageMetaQueryStatus{},
 			},
-			Username:    userId,
+			Username:    ctx.UserId(),
 			Enrichments: &event_api.PolicyEvaluationEvent_Data_ArtefactEnrichments{},
 		},
 	}

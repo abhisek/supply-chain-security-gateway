@@ -42,6 +42,8 @@ type AuthenticationCredentialProvider interface {
 
 // A provided or obtained credential for authentication
 type AuthenticationCredential interface {
+	ProjectId() string
+	OrgId() string
 	UserId() string
 	UserSecret() string
 }
@@ -49,7 +51,9 @@ type AuthenticationCredential interface {
 // Authenticated identity used in Ingress auth
 type AuthenticatedIdentity interface {
 	Type() string
-	Id() string
+	OrgId() string
+	ProjectId() string
+	UserId() string
 	Name() string
 }
 

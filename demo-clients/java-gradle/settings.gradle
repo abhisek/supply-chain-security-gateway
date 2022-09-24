@@ -21,7 +21,7 @@ pluginManagement {
             basic(BasicAuthentication)
         }
 
-        username "someUser"
+        username "demo-java-gradle/someUser@someOrg"
         password "somePassword"
       }
     }
@@ -38,7 +38,7 @@ pluginManagement {
             basic(BasicAuthentication)
         }
 
-        username "someUser"
+        username "demo-java-gradle/someUser@someOrg"
         password "somePassword"
       }
     }

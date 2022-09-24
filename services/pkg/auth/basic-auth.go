@@ -52,10 +52,12 @@ func (p *basicAuthProvider) Authenticate(ctx context.Context, cp AuthenticationC
 		return nil, err
 	}
 
-	return NewAuthIdentity(AuthIdentityTypeBasicAuth,
-		creds.UserId(),
-		fmt.Sprintf("Basic Auth User: %s", creds.UserId())), nil
-
+	return &authIdentity{
+		idType:    AuthIdentityTypeBasicAuth,
+		userId:    creds.UserId(),
+		orgId:     creds.OrgId(),
+		projectId: creds.ProjectId(),
+		name:      fmt.Sprintf("Basic Auth User: %s", creds.UserId())}, nil
 }
 
 func (p *basicAuthProvider) loadCredentials() error {

@@ -31,7 +31,7 @@ services:
     command: pdp-server
     volumes:
       - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
-      - ${BOOTSTRAP_BASIC_AUTH_FILE:-./config/gateway-auth-basic}:/auth/basic-auth-credentials
+      - ${BOOTSTRAP_BASIC_AUTH_FILE:-./config/gateway-auth-basic.txt}:/auth/basic-auth-credentials.txt
       - ./policies:/policies
       - ./pki/pdp/server.crt:/config/pki/server.crt
       - ./pki/pdp/server.key:/config/pki/server.key

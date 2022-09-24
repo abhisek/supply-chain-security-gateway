@@ -34,7 +34,9 @@ func NewPolicyInput(target common_models.Artefact,
 			Licenses:        lics,
 		},
 		Principal: PolicyInputPrincipal{
-			Id: requester.Id(),
+			UserId:    requester.UserId(),
+			ProjectId: requester.ProjectId(),
+			OrgId:     requester.OrgId(),
 		},
 	}
 }

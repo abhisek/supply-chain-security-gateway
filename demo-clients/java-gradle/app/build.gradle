@@ -26,7 +26,7 @@ repositories {
                 basic(BasicAuthentication)
             }
 
-            username "someUser"
+            username "demo-java-gradle/someUser@someOrg"
             password "somePassword"
         }
     }

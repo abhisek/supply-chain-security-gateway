@@ -54,7 +54,9 @@ func (s *tapService) Process(srv envoy_v3_ext_proc_pb.ExternalProcessor_ProcessS
 
 			resp.Response = &envoy_v3_ext_proc_pb.ProcessingResponse_RequestHeaders{
 				RequestHeaders: &envoy_v3_ext_proc_pb.HeadersResponse{
-					Response: &envoy_v3_ext_proc_pb.CommonResponse{},
+					Response: &envoy_v3_ext_proc_pb.CommonResponse{
+						Status: envoy_v3_ext_proc_pb.CommonResponse_CONTINUE,
+					},
 				},
 			}
 

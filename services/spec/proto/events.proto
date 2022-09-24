@@ -15,8 +15,10 @@ message EventTimestamp {
 
 // Use this for all contextual metadata
 message EventContext {
-  string org_id = 1;      // 0 indicate unsegmented
-  string project_id = 2;  // 0 indicate unsegmented
+  string org_id = 1;          // 0 indicate unsegmented
+  string project_id = 2;      // 0 indicate unsegmented
+  string gateway_domain = 3;
+  string env_domain = 4;
 }
 
 // Enumeration of all Event Types

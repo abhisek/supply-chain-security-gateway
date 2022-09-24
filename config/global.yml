@@ -72,4 +72,4 @@ authenticators:
   gateway-common-auth:
     type: basic
     params:
-      htpasswd_file: /auth/basic-auth-credentials
+      htpasswd_file: /auth/basic-auth-credentials.txt

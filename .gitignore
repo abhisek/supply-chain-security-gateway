@@ -1,3 +1,4 @@
 docs/.cache
 pki/
 .env
+config/gateway-auth-basic.txt
