@@ -21,6 +21,17 @@ Basic authentication as the only supported form of supplying credentials, since 
 
 We will not support fine grained *authorization* because we are in the data plane. We need to be minimalist for low latency and performance. Any need for limited authorization can be handled at policy level.
 
+
+## User Identification
+
+An user authenticating to the gateway is essentially using the *data plane* of the system. The username can be used to segment / namespace gateway resources in a multi-user scenario. The following convention can be followed for username:
+
+```
+projectId/username@organization
+```
+
+This is a convention using which it is possible to access the gateway while conveying information required for the gateway to associate project and organization information to a gateway generated event, such as policy violation. This is required for auditing and traceability of generated events.
+
 ## Flow
 
 ![Authentication Flow](images/auth-flow.png)

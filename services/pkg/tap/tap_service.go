@@ -5,6 +5,7 @@ import (
 	"log"
 
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	envoy_config_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_v3_ext_proc_pb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
@@ -37,6 +38,7 @@ func (s *tapService) Process(srv envoy_v3_ext_proc_pb.ExternalProcessor_ProcessS
 	for {
 		select {
 		case <-ctx.Done():
+			logger.Errorf("Context is finished: %v", ctx.Err())
 			return ctx.Err()
 		default:
 		}

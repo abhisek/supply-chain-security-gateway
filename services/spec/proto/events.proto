@@ -55,8 +55,27 @@ message PolicyEvaluationEvent {
         string title = 4;
       }
 
+      message ArtefactProjectScorecard {
+        message Repo {
+          string name = 1;
+          string commit = 2;
+        }
+
+        message Check {
+          string reason = 1;
+          float score = 2;
+        }
+
+        int64 timestamp = 1;
+        float score = 2;
+        Repo repo = 3;
+        map<string, Check> checks = 4;
+        string version = 5;
+      }
+
       repeated string licenses = 1;
       repeated ArtefactAdvisory advisories = 2;
+      ArtefactProjectScorecard scorecard = 3;
     }
 
     message Result {

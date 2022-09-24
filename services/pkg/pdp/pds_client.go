@@ -9,6 +9,7 @@ import (
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
 	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/openssf"
 
 	"google.golang.org/grpc"
 )
@@ -21,6 +22,7 @@ const (
 type PolicyDataServiceResponse struct {
 	Vulnerabilities []common_models.ArtefactVulnerability `json:"vulnerabilities"`
 	Licenses        []common_models.ArtefactLicense       `json:"licenses"`
+	Scorecard       openssf.ProjectScorecard
 }
 
 type PolicyDataClientInterface interface {

@@ -89,7 +89,54 @@ func (pds *pdsRayaClient) GetPackageMetaByVersion(ctx context.Context,
 		})
 	}
 
+	pdsResponse.Scorecard.Timestamp = response.ProjectScorecard.Timestamp
+	pdsResponse.Scorecard.Score = response.ProjectScorecard.Score
+	pdsResponse.Scorecard.Version = response.ProjectScorecard.Version
+
+	pdsResponse.Scorecard.Repo.Name = response.ProjectScorecard.Repo.Name
+	pdsResponse.Scorecard.Repo.Commit = response.ProjectScorecard.Repo.Commit
+
+	pdsResponse.Scorecard.Checks[openssf.ScBinaryArtifactsCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.BinaryArtifacts)
+	pdsResponse.Scorecard.Checks[openssf.ScBranchProtectionCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.BranchProtection)
+	pdsResponse.Scorecard.Checks[openssf.ScCiiBestPracticeCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.CiiBestPractices)
+	pdsResponse.Scorecard.Checks[openssf.ScCodeReviewCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.CodeReview)
+	pdsResponse.Scorecard.Checks[openssf.ScDangerousWorkflowCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.DangerousWorkflow)
+	pdsResponse.Scorecard.Checks[openssf.ScDependencyUpdateToolCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.DependencyUpdateTool)
+	pdsResponse.Scorecard.Checks[openssf.ScFuzzingCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Fuzzing)
+	pdsResponse.Scorecard.Checks[openssf.ScLicenseCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.License)
+	pdsResponse.Scorecard.Checks[openssf.ScMaintainedCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Maintained)
+	pdsResponse.Scorecard.Checks[openssf.ScPackagingCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Packaging)
+	pdsResponse.Scorecard.Checks[openssf.ScPinnedDependenciesCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.PinnedDependencies)
+	pdsResponse.Scorecard.Checks[openssf.ScSastCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Sast)
+	pdsResponse.Scorecard.Checks[openssf.ScSecurityPolicyCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.SecurityPolicy)
+	pdsResponse.Scorecard.Checks[openssf.ScSignedReleasesCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.SignedReleases)
+	pdsResponse.Scorecard.Checks[openssf.ScTokenPermissionsCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.TokenPermissions)
+	pdsResponse.Scorecard.Checks[openssf.ScVulnerabilitiesCheck] =
+		rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Vulnerabilities)
+
 	return pdsResponse, nil
+}
+
+func rayaScorecardCheckToOpenSsfScorecardCheck(sc *raya_api.ProjectScorecardCheck) openssf.ProjectScorecardCheck {
+	return openssf.ProjectScorecardCheck{
+		Reason: sc.Reason,
+		Score:  sc.Score,
+	}
 }
 
 func rayaEcosystemName(name string) string {

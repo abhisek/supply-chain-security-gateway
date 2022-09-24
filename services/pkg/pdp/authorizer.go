@@ -233,6 +233,24 @@ func (s *authorizationService) publishDecisionEvent(ctx *extendedContext,
 			})
 	}
 
+	event.Data.Enrichments.Scorecard = &event_api.PolicyEvaluationEvent_Data_ArtefactEnrichments_ArtefactProjectScorecard{
+		Timestamp: int64(pdsResponse.Scorecard.Timestamp),
+		Score:     pdsResponse.Scorecard.Score,
+		Version:   pdsResponse.Scorecard.Version,
+		Repo: &event_api.PolicyEvaluationEvent_Data_ArtefactEnrichments_ArtefactProjectScorecard_Repo{
+			Name:   pdsResponse.Scorecard.Repo.Name,
+			Commit: pdsResponse.Scorecard.Repo.Commit,
+		},
+		Checks: map[string]*event_api.PolicyEvaluationEvent_Data_ArtefactEnrichments_ArtefactProjectScorecard_Check{},
+	}
+
+	for name, check := range pdsResponse.Scorecard.Checks {
+		event.Data.Enrichments.Scorecard.Checks[name] = &event_api.PolicyEvaluationEvent_Data_ArtefactEnrichments_ArtefactProjectScorecard_Check{
+			Score:  check.Score,
+			Reason: check.Reason,
+		}
+	}
+
 	// status.FromError takes care of handling non-grpc error as well
 	grpcStatus, _ := grpc_err_status.FromError(enrichmentErr)
 	event.Data.Result.PackageQueryStatus.Code = grpcStatus.Code().String()

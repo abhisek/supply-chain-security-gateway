@@ -4,7 +4,7 @@
             <id>security-gateway</id>
             <username>{{GATEWAY_USERNAME}}</username>
             <password>{{GATEWAY_PASSWORD}}</password>
-            <configurations>
+            <configuration>
                 <httpHeaders>
                     <property>
                         <name>X-SGW-Project-Id</name>
@@ -19,7 +19,7 @@
                         <value>${env.SGW_PROJECT_ENV}</value>
                     </property>
                 </httpHeaders>
-            </configurations>
+            </configuration>
         </server>
     </servers>
 
