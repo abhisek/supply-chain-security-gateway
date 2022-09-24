@@ -45,6 +45,13 @@ function validateRunningEnv() {
   fi;
 }
 
+function applyOverrides() {
+	if [ "$GATEWAY_USERNAME" != "" ] && [ "$GATEWAY_PROJECT_ID" != "" ]; then
+		print_msg "Applying projectId:$GATEWAY_PROJECT_ID in username"
+		export GATEWAY_USERNAME="$GATEWAY_PROJECT_ID/$GATEWAY_USERNAME"
+	fi
+}
+
 function main() {
   loadScript "utils"
   loadScript "conventions"
@@ -57,6 +64,7 @@ function main() {
   fi;
 
   loadConfigurationIfPresent
+  applyOverrides
   case $command in
     configure)
       interactiveConfiguration

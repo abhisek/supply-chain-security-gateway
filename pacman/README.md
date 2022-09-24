@@ -27,6 +27,14 @@ Run `pacman` configuration wizard
 
 > **Note:** This script overwrite `$HOME/.m2/settings.xml`
 
+### Configuring Project
+
+To configure package managers building a specific project, set environment
+
+```
+GATEWAY_PROJECT_ID=project-id
+```
+
 ## Cleanup
 
 Remove any configuration file added by `pacman`
