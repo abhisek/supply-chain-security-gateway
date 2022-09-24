@@ -99,40 +99,43 @@ func (pds *pdsRayaClient) GetPackageMetaByVersion(ctx context.Context,
 			pdsResponse.Scorecard.Repo.Commit = response.ProjectScorecard.Repo.Commit
 		}
 
+		checksMap := map[string]openssf.ProjectScorecardCheck{}
 		if response.ProjectScorecard.Checks != nil {
-			pdsResponse.Scorecard.Checks[openssf.ScBinaryArtifactsCheck] =
+			checksMap[openssf.ScBinaryArtifactsCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.BinaryArtifacts)
-			pdsResponse.Scorecard.Checks[openssf.ScBranchProtectionCheck] =
+			checksMap[openssf.ScBranchProtectionCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.BranchProtection)
-			pdsResponse.Scorecard.Checks[openssf.ScCiiBestPracticeCheck] =
+			checksMap[openssf.ScCiiBestPracticeCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.CiiBestPractices)
-			pdsResponse.Scorecard.Checks[openssf.ScCodeReviewCheck] =
+			checksMap[openssf.ScCodeReviewCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.CodeReview)
-			pdsResponse.Scorecard.Checks[openssf.ScDangerousWorkflowCheck] =
+			checksMap[openssf.ScDangerousWorkflowCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.DangerousWorkflow)
-			pdsResponse.Scorecard.Checks[openssf.ScDependencyUpdateToolCheck] =
+			checksMap[openssf.ScDependencyUpdateToolCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.DependencyUpdateTool)
-			pdsResponse.Scorecard.Checks[openssf.ScFuzzingCheck] =
+			checksMap[openssf.ScFuzzingCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Fuzzing)
-			pdsResponse.Scorecard.Checks[openssf.ScLicenseCheck] =
+			checksMap[openssf.ScLicenseCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.License)
-			pdsResponse.Scorecard.Checks[openssf.ScMaintainedCheck] =
+			checksMap[openssf.ScMaintainedCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Maintained)
-			pdsResponse.Scorecard.Checks[openssf.ScPackagingCheck] =
+			checksMap[openssf.ScPackagingCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Packaging)
-			pdsResponse.Scorecard.Checks[openssf.ScPinnedDependenciesCheck] =
+			checksMap[openssf.ScPinnedDependenciesCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.PinnedDependencies)
-			pdsResponse.Scorecard.Checks[openssf.ScSastCheck] =
+			checksMap[openssf.ScSastCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Sast)
-			pdsResponse.Scorecard.Checks[openssf.ScSecurityPolicyCheck] =
+			checksMap[openssf.ScSecurityPolicyCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.SecurityPolicy)
-			pdsResponse.Scorecard.Checks[openssf.ScSignedReleasesCheck] =
+			checksMap[openssf.ScSignedReleasesCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.SignedReleases)
-			pdsResponse.Scorecard.Checks[openssf.ScTokenPermissionsCheck] =
+			checksMap[openssf.ScTokenPermissionsCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.TokenPermissions)
-			pdsResponse.Scorecard.Checks[openssf.ScVulnerabilitiesCheck] =
+			checksMap[openssf.ScVulnerabilitiesCheck] =
 				rayaScorecardCheckToOpenSsfScorecardCheck(response.ProjectScorecard.Checks.Vulnerabilities)
 		}
+
+		pdsResponse.Scorecard.Checks = checksMap
 	}
 
 	return pdsResponse, nil
