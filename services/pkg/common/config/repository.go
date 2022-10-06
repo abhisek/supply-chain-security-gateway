@@ -23,7 +23,7 @@ func NewConfigRepository() (ConfigRepository, error) {
 	cType := os.Getenv("BOOTSTRAP_CONFIGURATION_REPOSITORY_TYPE")
 	switch cType {
 	case configRepositoryTypeFile:
-		return NewConfigFileRepository(os.Getenv("BOOTSTRAP_CONFIGURATION_REPOSITORY_PATH"))
+		return NewConfigFileRepository(os.Getenv("BOOTSTRAP_CONFIGURATION_REPOSITORY_PATH"), false, true)
 	}
 
 	return nil, fmt.Errorf("unknown config repository type: %s", cType)

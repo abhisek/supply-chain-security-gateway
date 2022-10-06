@@ -15,11 +15,15 @@ type configFileRepository struct {
 	m                    sync.RWMutex
 }
 
-func NewConfigFileRepository(path string) (ConfigRepository, error) {
+func NewConfigFileRepository(path string, lazy bool, monitorForChange bool) (ConfigRepository, error) {
 	r := &configFileRepository{path: path}
+	var err error
 
-	err := r.load()
-	if err == nil {
+	if !lazy {
+		err = r.load()
+	}
+
+	if err == nil && monitorForChange {
 		err = r.monitorForChange()
 	}
 
@@ -28,7 +32,11 @@ func NewConfigFileRepository(path string) (ConfigRepository, error) {
 
 func (c *configFileRepository) LoadGatewayConfiguration() (*config_api.GatewayConfiguration, error) {
 	var err error = nil
-	if c.gatewayConfiguration != nil {
+	if c.gatewayConfiguration == nil {
+		_ = c.load()
+	}
+
+	if c.gatewayConfiguration == nil {
 		err = fmt.Errorf("gateway configuration is not loaded")
 	}
 
@@ -47,6 +55,8 @@ func (c *configFileRepository) load() error {
 	if err != nil {
 		return err
 	}
+
+	defer file.Close()
 
 	var gatewayConfiguration config_api.GatewayConfiguration
 	err = yaml.NewDecoder(file).Decode(&gatewayConfiguration)

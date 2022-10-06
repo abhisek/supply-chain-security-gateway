@@ -70,7 +70,7 @@ func validateConfigCommand() error {
 		os.Exit(-1)
 	}
 
-	_, err := config.NewConfigFileRepository(fileRepoPath)
+	_, err := config.NewConfigFileRepository(fileRepoPath, false, false)
 	if err != nil {
 		logger.Fatalf("Failed to create config repo: %v", err)
 	}
