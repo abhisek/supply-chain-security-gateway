@@ -3,9 +3,9 @@
 # support host based routing as well
 upstreams:
 - name: maven-central
-  type: maven2
+  type: Maven
   authentication:
-    type: noauth
+    type: NoAuth
     provider: gateway-common-auth
   route:
     prefix: /maven2
@@ -16,9 +16,9 @@ upstreams:
     sni: repo.maven.apache.org
     authentication: {}
 - name: gradle-plugins
-  type: maven2
+  type: Maven
   authentication:
-    type: noauth
+    type: NoAuth
     provider: gateway-common-auth
   route:
     prefix: /gradle-plugins/m2
@@ -28,9 +28,9 @@ upstreams:
     tls: true
     sni: plugins.gradle.org
 - name: pypi-org
-  type: pypi
+  type: PyPI
   authentication:
-    type: noauth
+    type: NoAuth
   route:
     prefix: /pypi
   repository:
@@ -65,11 +65,11 @@ dcs:
       sbom: com.msg.event.dcs.sbom
 secrets:
   example-env-secret:
-    source: environment
+    source: Environment
     key: EXAMPLE_SECRET_FROM_ENVIRONMENT
 
 authenticators:
   gateway-common-auth:
-    type: basic
+    type: Basic
     params:
       htpasswd_file: /auth/basic-auth-credentials.txt

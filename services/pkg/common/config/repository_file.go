@@ -48,8 +48,11 @@ func (c *configFileRepository) load() error {
 		return err
 	}
 
+	decoder := yaml.NewDecoder(file)
+	decoder.SetStrict(false)
+
 	var gatewayConfiguration config_api.GatewayConfiguration
-	err = yaml.NewDecoder(file).Decode(&gatewayConfiguration)
+	err = decoder.Decode(&gatewayConfiguration)
 	if err != nil {
 		return err
 	}
