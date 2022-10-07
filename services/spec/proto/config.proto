@@ -55,6 +55,9 @@ message GatewayUpstreamRepository {
   bool tls = 3;
   string sni = 4;
   GatewayAuthenticationProvider authentication = 5;
+
+  string host_rewrite_value = 6;
+  string path_prefix_rewrite_value = 7;
 }
 
 message GatewayInfo {

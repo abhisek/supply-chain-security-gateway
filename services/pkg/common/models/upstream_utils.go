@@ -80,7 +80,7 @@ func artefactForPypi(parts []string) (Artefact, error) {
 		return Artefact{}, errIncorrectPypiPath
 	}
 
-	if (parts[0] == "simple") && (len(parts) >= 2) {
+	if ((parts[0] == "simple") || (parts[0] == "packages")) && (len(parts) >= 2) {
 		parts = parts[1:]
 	}
 
