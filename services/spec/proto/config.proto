@@ -95,9 +95,34 @@ message GatewaySecret {
   string key = 2;
 }
 
+message MessagingAdapter {
+  enum AdapterType {
+    NATS = 0;
+    KAFKA = 1;
+  }
+
+  message NatsAdapterConfig {
+    string url = 1;
+  }
+
+  message KafkaAdapterConfig {
+    repeated string bootstrap_servers = 1;
+    string schema_registry_url = 2;
+  }
+
+  AdapterType type = 1;
+
+  // https://developers.google.com/protocol-buffers/docs/proto#oneof
+  oneof config {
+    NatsAdapterConfig nats = 2;
+    KafkaAdapterConfig kafka = 3;
+  }
+}
+
 message GatewayConfiguration {
   GatewayInfo info = 1;
   repeated GatewayUpstream upstreams = 2;
   map<string, GatewayAuthenticator> authenticators = 3;
   map<string, GatewaySecret> secrets = 4;
+  map<string, MessagingAdapter> messaging = 5;
 }

@@ -15,6 +15,7 @@ var (
 	command       string
 	gatewayName   string
 	gatewayDomain string
+	natsUrl       string
 )
 
 const (
@@ -38,8 +39,9 @@ var (
 func init() {
 	flag.StringVar(&fileRepoPath, "file", "", "YAML file path for configuration")
 	flag.StringVar(&command, "command", commandValidateConf, "Command to invoke")
-	flag.StringVar(&gatewayName, "gateway-name", "demo", "Command to invoke")
-	flag.StringVar(&gatewayDomain, "gateway-domain", "demo", "Command to invoke")
+	flag.StringVar(&gatewayName, "gateway-name", "localhost", "Command to invoke")
+	flag.StringVar(&gatewayDomain, "gateway-domain", "localhost", "Command to invoke")
+	flag.StringVar(&natsUrl, "nats-url", "tls://nats-server:4222", "NATS URL for messaging")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "%s Usage:\n", os.Args[0])

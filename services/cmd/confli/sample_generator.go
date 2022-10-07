@@ -28,6 +28,7 @@ func (s *sampleConfigGenerator) generate() error {
 	s.addInfo(gateway)
 	s.addDefaultUpstreams(gateway)
 	s.addDefaultGatewayAuth(gateway)
+	s.addMessaging(gateway)
 
 	s.printConfig(gateway)
 
@@ -82,6 +83,28 @@ func (s *sampleConfigGenerator) addDefaultUpstreams(gateway *config_api.GatewayC
 	gateway.Upstreams = append(gateway.Upstreams, s.getUpstream("gradle-plugins", config_api.GatewayUpstreamType_Maven,
 		config_api.GatewayUpstreamManagementType_GatewayAdmin, "/gradle-plugins/m2",
 		"plugins.gradle.org", "443"))
+}
+
+func (s *sampleConfigGenerator) addMessaging(gateway *config_api.GatewayConfiguration) {
+	gateway.Messaging = map[string]*config_api.MessagingAdapter{
+		"nats": {
+			Type: config_api.MessagingAdapter_NATS,
+			Config: &config_api.MessagingAdapter_Nats{
+				Nats: &config_api.MessagingAdapter_NatsAdapterConfig{
+					Url: natsUrl,
+				},
+			},
+		},
+		"kafka": {
+			Type: config_api.MessagingAdapter_KAFKA,
+			Config: &config_api.MessagingAdapter_Kafka{
+				Kafka: &config_api.MessagingAdapter_KafkaAdapterConfig{
+					BootstrapServers:  []string{"kafka-host:9092"},
+					SchemaRegistryUrl: "http://kafka-host:8081",
+				},
+			},
+		},
+	}
 }
 
 func (s *sampleConfigGenerator) getUpstream(name string,
