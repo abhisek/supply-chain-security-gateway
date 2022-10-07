@@ -12,6 +12,8 @@ import (
 
 const (
 	ingressGatewayBasicAuthenticatorName = "default-basic-auth"
+	messagingAdapterNameNATS             = "nats"
+	messagingAdapterNameKafka            = "kafka"
 )
 
 type sampleConfigGenerator struct {
@@ -29,6 +31,7 @@ func (s *sampleConfigGenerator) generate() error {
 	s.addDefaultUpstreams(gateway)
 	s.addDefaultGatewayAuth(gateway)
 	s.addMessaging(gateway)
+	s.addServiceConfig(gateway)
 
 	s.printConfig(gateway)
 
@@ -65,8 +68,10 @@ func (s *sampleConfigGenerator) addDefaultGatewayAuth(gateway *config_api.Gatewa
 	gateway.Authenticators = map[string]*config_api.GatewayAuthenticator{
 		ingressGatewayBasicAuthenticatorName: {
 			Type: config_api.GatewayAuthenticationType_Basic,
-			BasicAuth: &config_api.GatewayAuthenticatorBasicAuth{
-				Path: "data/default-basic-auth.txt",
+			Config: &config_api.GatewayAuthenticator_BasicAuth{
+				BasicAuth: &config_api.GatewayAuthenticatorBasicAuth{
+					Path: "data/default-basic-auth.txt",
+				},
 			},
 		},
 	}
@@ -87,7 +92,7 @@ func (s *sampleConfigGenerator) addDefaultUpstreams(gateway *config_api.GatewayC
 
 func (s *sampleConfigGenerator) addMessaging(gateway *config_api.GatewayConfiguration) {
 	gateway.Messaging = map[string]*config_api.MessagingAdapter{
-		"nats": {
+		messagingAdapterNameNATS: {
 			Type: config_api.MessagingAdapter_NATS,
 			Config: &config_api.MessagingAdapter_Nats{
 				Nats: &config_api.MessagingAdapter_NatsAdapterConfig{
@@ -95,7 +100,7 @@ func (s *sampleConfigGenerator) addMessaging(gateway *config_api.GatewayConfigur
 				},
 			},
 		},
-		"kafka": {
+		messagingAdapterNameKafka: {
 			Type: config_api.MessagingAdapter_KAFKA,
 			Config: &config_api.MessagingAdapter_Kafka{
 				Kafka: &config_api.MessagingAdapter_KafkaAdapterConfig{
@@ -104,6 +109,54 @@ func (s *sampleConfigGenerator) addMessaging(gateway *config_api.GatewayConfigur
 				},
 			},
 		},
+	}
+}
+
+func (s *sampleConfigGenerator) addServiceConfig(gateway *config_api.GatewayConfiguration) {
+	gateway.Services = &config_api.GatewayConfiguration_ServiceConfig{}
+
+	s.addPdpServiceConfig(gateway.Services)
+	s.addTapServiceConfig(gateway.Services)
+	s.addDcsServiceConfig(gateway.Services)
+}
+
+func (s *sampleConfigGenerator) addPdpServiceConfig(config *config_api.GatewayConfiguration_ServiceConfig) {
+	config.Pdp = &config_api.PdpServiceConfig{
+		MonitorMode: true,
+		PublisherConfig: &config_api.PdpServiceConfig_PublisherConfig{
+			MessagingAdapterName: messagingAdapterNameNATS,
+			TopicNames: &config_api.PdpServiceConfig_PublisherConfig_TopicNames{
+				PolicyAudit: "gateway.pdp.audits",
+			},
+		},
+		PdsClient: &config_api.PdsClientConfig{
+			Type: config_api.PdsClientType_LOCAL,
+			Config: &config_api.PdsClientConfig_Common{
+				Common: &config_api.PdsClientCommonConfig{
+					Host: "pds",
+					Port: 9002,
+					Mtls: true,
+				},
+			},
+		},
+	}
+}
+
+func (s *sampleConfigGenerator) addTapServiceConfig(config *config_api.GatewayConfiguration_ServiceConfig) {
+	config.Tap = &config_api.TapServiceConfig{
+		PublisherConfig: &config_api.TapServiceConfig_PublisherConfig{
+			MessagingAdapterName: messagingAdapterNameNATS,
+			TopicNames: &config_api.TapServiceConfig_PublisherConfig_TopicNames{
+				UpstreamRequest:  "gateway.tap.upstream_req",
+				UpstreamResponse: "gateway.tap.upstream_res",
+			},
+		},
+	}
+}
+
+func (s *sampleConfigGenerator) addDcsServiceConfig(config *config_api.GatewayConfiguration_ServiceConfig) {
+	config.Dcs = &config_api.DcsServiceConfig{
+		Active: true,
 	}
 }
 

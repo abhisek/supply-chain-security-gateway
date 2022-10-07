@@ -87,7 +87,10 @@ message GatewayAuthenticatorBasicAuth {
 
 message GatewayAuthenticator {
   GatewayAuthenticationType type = 1;
-  GatewayAuthenticatorBasicAuth basic_auth = 2;
+
+  oneof config {
+    GatewayAuthenticatorBasicAuth basic_auth = 2;
+  }
 }
 
 message GatewaySecret {
@@ -119,10 +122,78 @@ message MessagingAdapter {
   }
 }
 
+message TapServiceConfig {
+  message PublisherConfig {
+    message TopicNames {
+      string upstream_request = 1;
+      string upstream_response = 2;
+    }
+
+    string messaging_adapter_name = 1;
+    TopicNames topic_names = 2;
+  }
+
+  PublisherConfig publisher_config = 1;
+}
+
+enum PdsClientType {
+  LOCAL = 0;
+  RAYA = 1;
+}
+
+message PdsClientCommonConfig {
+  string host = 1;
+  int32 port = 2;
+  bool mtls = 3;
+}
+
+message PdsClientConfig {
+  PdsClientType type = 1;
+  oneof config {
+    PdsClientCommonConfig common = 2;
+  }
+}
+
+message PdpServiceConfig {
+  message PublisherConfig {
+    message TopicNames {
+      string policy_audit = 1;
+    }
+
+    string messaging_adapter_name = 1;
+    TopicNames topic_names = 2;
+  }
+
+  bool monitor_mode = 1;
+  PdsClientConfig pds_client = 2;
+  PublisherConfig publisher_config = 3;
+}
+
+message DcsServiceConfig {
+  enum StorageAdapterType {
+    MYSQL = 0;
+  }
+
+  bool active = 1;
+  StorageAdapterType storage_type = 2;
+
+  // TODO: Introduce storage configurations similar to messaging
+  // Services can refer to the config by name
+  string storage_adapter_config_name = 3;
+}
+
 message GatewayConfiguration {
   GatewayInfo info = 1;
   repeated GatewayUpstream upstreams = 2;
   map<string, GatewayAuthenticator> authenticators = 3;
   map<string, GatewaySecret> secrets = 4;
   map<string, MessagingAdapter> messaging = 5;
+
+  message ServiceConfig {
+    PdpServiceConfig pdp = 1;
+    TapServiceConfig tap = 2;
+    DcsServiceConfig dcs = 3;
+  }
+
+  ServiceConfig services = 6;
 }
