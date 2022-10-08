@@ -1,13 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"os"
 
 	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
-	"github.com/ghodss/yaml"
+	"github.com/golang/protobuf/jsonpb"
 )
 
 const (
@@ -41,19 +40,14 @@ func (s *sampleConfigGenerator) generate() error {
 // We serialize to JSON first because proto generated classes has JSON
 // key name annotations
 func (s *sampleConfigGenerator) printConfig(gateway *config_api.GatewayConfiguration) {
-	data, err := json.Marshal(gateway)
+	m := jsonpb.Marshaler{Indent: "  "}
+	data, err := m.MarshalToString(gateway)
 	if err != nil {
 		logger.Errorf("Failed to JSON serialize gateway config: %v", err)
 		return
 	}
 
-	yamlData, err := yaml.JSONToYAML(data)
-	if err != nil {
-		logger.Errorf("Failed to convert YAML: %v", err)
-		return
-	}
-
-	os.Stdout.Write(yamlData)
+	os.Stdout.Write([]byte(data))
 }
 
 func (s *sampleConfigGenerator) addInfo(gateway *config_api.GatewayConfiguration) {
@@ -82,11 +76,11 @@ func (s *sampleConfigGenerator) addDefaultUpstreams(gateway *config_api.GatewayC
 
 	gateway.Upstreams = append(gateway.Upstreams,
 		s.getUpstream("maven-central", config_api.GatewayUpstreamType_Maven,
-			config_api.GatewayUpstreamManagementType_GatewayAdmin, "/maven2",
+			config_api.GatewayUpstreamManagementType_GatewayAdmin, "/maven2", "/maven2",
 			"repo.maven.apache.org", "443"))
 
 	gateway.Upstreams = append(gateway.Upstreams, s.getUpstream("gradle-plugins", config_api.GatewayUpstreamType_Maven,
-		config_api.GatewayUpstreamManagementType_GatewayAdmin, "/gradle-plugins/m2",
+		config_api.GatewayUpstreamManagementType_GatewayAdmin, "/gradle-plugins/m2", "/m2",
 		"plugins.gradle.org", "443"))
 }
 
@@ -156,13 +150,14 @@ func (s *sampleConfigGenerator) addTapServiceConfig(config *config_api.GatewayCo
 
 func (s *sampleConfigGenerator) addDcsServiceConfig(config *config_api.GatewayConfiguration_ServiceConfig) {
 	config.Dcs = &config_api.DcsServiceConfig{
-		Active: true,
+		Active:               true,
+		MessagingAdapterName: messagingAdapterNameNATS,
 	}
 }
 
 func (s *sampleConfigGenerator) getUpstream(name string,
 	uType config_api.GatewayUpstreamType, mType config_api.GatewayUpstreamManagementType,
-	pathPrefix string, host string, port string) *config_api.GatewayUpstream {
+	pathPrefix string, pathRewrite string, host string, port string) *config_api.GatewayUpstream {
 
 	return &config_api.GatewayUpstream{
 		Name:           name,
@@ -173,7 +168,9 @@ func (s *sampleConfigGenerator) getUpstream(name string,
 			Provider: ingressGatewayBasicAuthenticatorName,
 		},
 		Route: &config_api.GatewayUpstreamRoute{
-			PathPrefix: pathPrefix,
+			PathPrefix:             pathPrefix,
+			HostRewriteValue:       host,
+			PathPrefixRewriteValue: pathRewrite,
 		},
 		Repository: &config_api.GatewayUpstreamRepository{
 			Host:           host,

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/auth"
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
@@ -29,23 +29,21 @@ var (
 )
 
 type authorizationService struct {
-	config            *common_config.Config
 	authProvider      auth.AuthenticationProvider
 	policyEngine      *PolicyEngine
 	policyDataService PolicyDataClientInterface
 	messagingService  messaging.MessagingService
 }
 
-func NewAuthorizationService(config *common_config.Config, p PolicyDataClientInterface,
+func NewAuthorizationService(p PolicyDataClientInterface,
 	m messaging.MessagingService) (envoy_service_auth_v3.AuthorizationServer, error) {
 	engine, err := NewPolicyEngine(os.Getenv("PDP_POLICY_PATH"), true)
 	if err != nil {
 		return &authorizationService{}, err
 	}
 
-	authProvider := auth.NewAuthenticationProvider(config)
-	return &authorizationService{config: config,
-		authProvider:      authProvider,
+	authProvider := auth.NewAuthenticationProvider()
+	return &authorizationService{authProvider: authProvider,
 		policyEngine:      engine,
 		policyDataService: p,
 		messagingService:  m}, nil
@@ -70,9 +68,9 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 	logger := logger.With(obs.LoggerTags(ctx))
 	httpReq := req.Attributes.Request.Http
 
-	exCtx := ExtendContext(ctx)
-	exCtx.WithEnvoyCheckRequest(req)
-	exCtx.WithLogger(logger)
+	exCtx := ExtendContext(ctx).
+		WithEnvoyCheckRequest(req).
+		WithLogger(logger)
 
 	upstreamArtefact, upstream, err := s.resolveRequestedArtefact(httpReq)
 	if err != nil {
@@ -127,9 +125,9 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	gatewayDeny := !s.config.Global.PdpService.MonitorMode && !policyRespose.Allowed()
+	gatewayDeny := !config.Current().PdpServiceConfig().MonitorMode && !policyRespose.Allowed()
 	s.publishDecisionEvent(exCtx, pdsResponse, !gatewayDeny,
-		s.config.Global.PdpService.MonitorMode, policyRespose, enrichmentErr)
+		config.Current().PdpServiceConfig().MonitorMode, policyRespose, enrichmentErr)
 
 	if gatewayDeny {
 		logger.Infof("Policy denied upstream request")
@@ -158,7 +156,8 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 
 func (s *authorizationService) resolveRequestedArtefact(req *envoy_service_auth_v3.AttributeContext_HttpRequest) (common_models.Artefact,
 	common_models.ArtefactUpStream, error) {
-	for _, upstream := range s.config.Global.Upstreams {
+	for _, us := range config.Current().Upstreams() {
+		upstream := toLegacyUpstream(us)
 		if upstream.MatchPath(req.Path) {
 			a, err := upstream.Path2Artefact(req.Path)
 			return a, upstream, err
@@ -258,7 +257,7 @@ func (s *authorizationService) publishDecisionEvent(ctx *extendedContext,
 
 	logger.With("event", event).Info("Event published")
 
-	topic := s.config.Global.PdpService.Publisher.TopicMappings["policy_audit"]
+	topic := config.Current().PdpServiceConfig().PublisherConfig.TopicNames.PolicyAudit
 	err := s.messagingService.Publish(topic, event)
 	if err != nil {
 		logger.Infof("[ERROR] Failed to publish audit event to topic: %s err: %v", topic, err)

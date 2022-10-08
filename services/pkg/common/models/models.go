@@ -1,10 +1,10 @@
 package models
 
 const (
-	ArtefactSourceTypeMaven2   = "maven2"
-	ArtefactSourceTypeNpm      = "npm"
-	ArtefactSourceTypePypi     = "pypi"
-	ArtefactSourceTypeRubyGems = "rubygems"
+	ArtefactSourceTypeMaven2   = "Maven"
+	ArtefactSourceTypeNpm      = "Npm"
+	ArtefactSourceTypePypi     = "PyPI"
+	ArtefactSourceTypeRubyGems = "RubyGems"
 
 	ArtefactUpstreamAuthTypeNoAuth = "noauth"
 

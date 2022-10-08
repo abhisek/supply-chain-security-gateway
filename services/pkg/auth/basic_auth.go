@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,13 +22,12 @@ var (
 
 // Implement basic auth for gateway ingress
 type basicAuthProvider struct {
-	config      common_config.AuthenticatorConfig
 	file        string
 	credentials map[string]string
 }
 
-func NewIngressBasicAuthService(config common_config.AuthenticatorConfig) (IngressAuthenticationService, error) {
-	p := &basicAuthProvider{config: config, file: config.Params["htpasswd_file"]}
+func NewIngressBasicAuthService(cfg *config_api.GatewayAuthenticatorBasicAuth) (IngressAuthenticationService, error) {
+	p := &basicAuthProvider{file: cfg.Path}
 	if err := p.loadCredentials(); err != nil {
 		return nil, err
 	}

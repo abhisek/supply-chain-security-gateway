@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
-	"gopkg.in/yaml.v2"
+	"github.com/golang/protobuf/jsonpb"
 )
 
 type configFileRepository struct {
@@ -59,7 +59,7 @@ func (c *configFileRepository) load() error {
 	defer file.Close()
 
 	var gatewayConfiguration config_api.GatewayConfiguration
-	err = yaml.NewDecoder(file).Decode(&gatewayConfiguration)
+	err = jsonpb.Unmarshal(file, &gatewayConfiguration)
 	if err != nil {
 		return err
 	}

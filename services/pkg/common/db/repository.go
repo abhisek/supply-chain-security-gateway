@@ -1,19 +1,16 @@
 package db
 
 import (
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
-
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db/adapters"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db/models"
 	"gorm.io/gorm"
 )
 
 type VulnerabilityRepository struct {
-	config  *common_config.Config
 	adapter adapters.SqlDataAdapter
 }
 
-func NewVulnerabilityRepository(config *common_config.Config, adapter adapters.SqlDataAdapter) (*VulnerabilityRepository, error) {
+func NewVulnerabilityRepository(adapter adapters.SqlDataAdapter) (*VulnerabilityRepository, error) {
 	return &VulnerabilityRepository{adapter: adapter}, nil
 }
 

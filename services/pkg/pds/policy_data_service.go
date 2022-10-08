@@ -6,7 +6,6 @@ import (
 	"log"
 
 	api "github.com/abhisek/supply-chain-gateway/services/gen"
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	"google.golang.org/grpc/codes"
@@ -15,13 +14,11 @@ import (
 
 type policyDataServer struct {
 	api.PolicyDataServiceServer
-	config     *common_config.Config
 	repository *db.VulnerabilityRepository
 }
 
-func NewPolicyDataService(config *common_config.Config, repo *db.VulnerabilityRepository) (api.PolicyDataServiceServer, error) {
+func NewPolicyDataService(repo *db.VulnerabilityRepository) (api.PolicyDataServiceServer, error) {
 	return &policyDataServer{
-		config:     config,
 		repository: repo,
 	}, nil
 }

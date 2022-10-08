@@ -47,6 +47,9 @@ message GatewayUpstreamRoute {
   string host = 1;
   string path_prefix = 2;
   string path_pattern = 3;
+
+  string host_rewrite_value = 4;
+  string path_prefix_rewrite_value = 5;
 }
 
 message GatewayUpstreamRepository {
@@ -55,9 +58,6 @@ message GatewayUpstreamRepository {
   bool tls = 3;
   string sni = 4;
   GatewayAuthenticationProvider authentication = 5;
-
-  string host_rewrite_value = 6;
-  string path_prefix_rewrite_value = 7;
 }
 
 message GatewayInfo {
@@ -96,9 +96,15 @@ message GatewayAuthenticator {
   }
 }
 
+message GatewaySecretSourceEnvironment {
+  string key = 1;
+}
+
 message GatewaySecret {
   GatewaySecretSource source = 1;
-  string key = 2;
+  oneof value {
+    GatewaySecretSourceEnvironment environment = 2;
+  }
 }
 
 message MessagingAdapter {
@@ -154,7 +160,7 @@ message PdsClientConfig {
   PdsClientType type = 1;
   oneof config {
     PdsClientCommonConfig common = 2;
-  }
+  };
 }
 
 message PdpServiceConfig {
@@ -183,6 +189,8 @@ message DcsServiceConfig {
   // TODO: Introduce storage configurations similar to messaging
   // Services can refer to the config by name
   string storage_adapter_config_name = 3;
+
+  string messaging_adapter_name = 4;
 }
 
 message GatewayConfiguration {

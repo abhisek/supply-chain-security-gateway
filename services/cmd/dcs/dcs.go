@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"strconv"
 
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db/adapters"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
@@ -17,23 +16,26 @@ import (
 
 func main() {
 	logger.Init("dcs")
+	config.Bootstrap("", true)
 
 	tracerShutDown := obs.InitTracing()
 	defer tracerShutDown(context.Background())
 
-	config, err := common_config.LoadGlobal("")
+	msgAdapter, err := config.Current().
+		GetMessagingConfigByName(config.Current().
+			DcsServiceConfig().GetMessagingAdapterName())
 	if err != nil {
-		log.Fatalf("Failed to load config: %s", err.Error())
+		logger.Fatalf("Failed to get messaging adapter config")
 	}
 
-	msgService, err := messaging.NewNatsMessagingService(config)
+	msgService, err := messaging.NewService(msgAdapter)
 	if err != nil {
-		log.Fatalf("Failed to create messaging service: %v", err)
+		logger.Fatalf("Failed to create messaging service: %v", err)
 	}
 
 	mysqlPort, err := strconv.ParseInt(os.Getenv("MYSQL_SERVER_PORT"), 0, 16)
 	if err != nil {
-		log.Fatalf("Failed to parse mysql server port: %v", err)
+		logger.Fatalf("Failed to parse mysql server port: %v", err)
 	}
 
 	mysqlAdapter, err := adapters.NewMySqlAdapter(adapters.MySqlAdapterConfig{
@@ -44,24 +46,24 @@ func main() {
 		Database: os.Getenv("MYSQL_DATABASE"),
 	})
 	if err != nil {
-		log.Fatalf("Failed to initialize MySQL adapter: %v", err)
+		logger.Fatalf("Failed to initialize MySQL adapter: %v", err)
 	}
 
 	err = db.MigrateSqlModels(mysqlAdapter)
 	if err != nil {
-		log.Fatalf("Failed to run MySQL migration: %v", err)
+		logger.Fatalf("Failed to run MySQL migration: %v", err)
 	}
 
-	repository, err := db.NewVulnerabilityRepository(config, mysqlAdapter)
+	repository, err := db.NewVulnerabilityRepository(mysqlAdapter)
 	if err != nil {
-		log.Fatalf("Failed to create vulnerability repository")
+		logger.Fatalf("Failed to create vulnerability repository")
 	}
 
-	dcs, err := dcs.NewDataCollectionService(config, msgService, repository)
+	dcs, err := dcs.NewDataCollectionService(msgService, repository)
 	if err != nil {
-		log.Fatalf("Failed to created DCS: %v", err)
+		logger.Fatalf("Failed to created DCS: %v", err)
 	}
 
-	log.Printf("Starting data collector service(s)")
+	logger.Infof("Starting data collector service(s)")
 	dcs.Start()
 }

@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/obs"
 
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/pdp"
 	envoy_service_auth_v3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"google.golang.org/grpc"
@@ -17,26 +19,22 @@ import (
 
 func main() {
 	logger.Init("pdp")
+	config.Bootstrap("", true)
 
 	tracerShutDown := obs.InitTracing()
 	defer tracerShutDown(context.Background())
 
-	config, err := common_config.LoadGlobal("")
-	if err != nil {
-		logger.Fatalf("Failed to load config: %s", err.Error())
-	}
-
-	policyDataService, err := pdp.NewPolicyDataServiceClient(config.Global.PdpService)
+	policyDataService, err := pdp.NewPolicyDataServiceClient(config.Current().PdpServiceConfig().GetPdsClient())
 	if err != nil {
 		logger.Fatalf("Failed to create policy data service client: %v", err)
 	}
 
-	messagingService, err := buildMessagingService(config)
+	messagingService, err := buildMessagingService()
 	if err != nil {
 		logger.Fatalf("Failed to build messaging service: %v", err)
 	}
 
-	authService, err := pdp.NewAuthorizationService(config, policyDataService, messagingService)
+	authService, err := pdp.NewAuthorizationService(policyDataService, messagingService)
 	if err != nil {
 		logger.Fatalf("Failed to create auth service: %s", err.Error())
 	}
@@ -47,14 +45,23 @@ func main() {
 		})
 }
 
-func buildMessagingService(config *common_config.Config) (messaging.MessagingService, error) {
-	switch config.Global.PdpService.Publisher.Type {
-	case "kafka-pongo":
+func buildMessagingService() (messaging.MessagingService, error) {
+	cfg := config.Current().PdpServiceConfig()
+	messageAdapter, err := config.Current().GetMessagingConfigByName(cfg.PublisherConfig.MessagingAdapterName)
+	if err != nil {
+		return nil, err
+	}
+
+	// FIXME: Migrate to messaging.NewService(...) config based factory
+	switch messageAdapter.Type {
+	case config_api.MessagingAdapter_KAFKA:
 		logger.Infof("Using Kafka (pongo) messaging service")
 		return messaging.NewKafkaProtobufMessagingService(os.Getenv("PDP_KAFKA_PONGO_BOOTSTRAP_SERVERS"),
 			os.Getenv("PDP_KAFKA_PONGO_SCHEMA_REGISTRY_URL"))
-	default:
+	case config_api.MessagingAdapter_NATS:
 		logger.Infof("Using NATs messaging service")
-		return messaging.NewNatsMessagingService(config)
+		return messaging.NewNatsMessagingService(messageAdapter)
+	default:
+		return nil, fmt.Errorf("unknown message adapter type: %s", messageAdapter.Type.String())
 	}
 }

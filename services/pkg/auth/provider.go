@@ -4,28 +4,27 @@ import (
 	"errors"
 	"fmt"
 
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 )
 
 type authProvider struct {
-	config *common_config.Config
-
 	// Unbounded cache, should not be a problem because the
 	// number of providers can be limited
 	ingressCache map[string]IngressAuthenticationService
 	egressCache  map[string]EgressAuthenticationService
 }
 
-func NewAuthenticationProvider(config *common_config.Config) AuthenticationProvider {
-	return &authProvider{config: config}
+func NewAuthenticationProvider() AuthenticationProvider {
+	return &authProvider{}
 }
 
 func (a *authProvider) IngressAuthService(upstream common_models.ArtefactUpStream) (IngressAuthenticationService, error) {
-	cf := func(s func(c common_config.AuthenticatorConfig) (IngressAuthenticationService, error)) (IngressAuthenticationService, error) {
-		cfg, ok := a.config.Global.Authenticators[upstream.Authentication.Provider]
-		if !ok {
-			return nil, fmt.Errorf("no authenticator defined for: %s", upstream.Authentication.Provider)
+	cf := func(s func(c *config_api.GatewayAuthenticator) (IngressAuthenticationService, error)) (IngressAuthenticationService, error) {
+		cfg, err := config.Current().GetAuthenticatorByName(upstream.Authentication.Provider)
+		if err != nil {
+			return nil, err
 		}
 
 		return s(cfg)
@@ -38,8 +37,8 @@ func (a *authProvider) IngressAuthService(upstream common_models.ArtefactUpStrea
 	case AuthTypeNoAuth:
 		return NewIngressNoAuthService()
 	case AuthTypeBasic:
-		return cf(func(c common_config.AuthenticatorConfig) (IngressAuthenticationService, error) {
-			return NewIngressBasicAuthService(c)
+		return cf(func(c *config_api.GatewayAuthenticator) (IngressAuthenticationService, error) {
+			return NewIngressBasicAuthService(c.GetBasicAuth())
 		})
 	default:
 		return nil, fmt.Errorf("no auth service available for: %s", upstream.Authentication.Provider)
