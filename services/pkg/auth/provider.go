@@ -33,14 +33,13 @@ func (a *authProvider) IngressAuthService(upstream common_models.ArtefactUpStrea
 	// TODO: Implement a cache for services to prevent reinitialize the same
 	// authenticator, uniquely identified by a name
 
-	switch upstream.Authentication.Type {
-	case AuthTypeNoAuth:
-		return NewIngressNoAuthService()
-	case AuthTypeBasic:
+	if upstream.Authentication.IsBasic() {
 		return cf(func(c *config_api.GatewayAuthenticator) (IngressAuthenticationService, error) {
 			return NewIngressBasicAuthService(c.GetBasicAuth())
 		})
-	default:
+	} else if upstream.Authentication.IsNoAuth() {
+		return NewIngressNoAuthService()
+	} else {
 		return nil, fmt.Errorf("no auth service available for: %s", upstream.Authentication.Provider)
 	}
 }

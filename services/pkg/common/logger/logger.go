@@ -26,7 +26,7 @@ func Init(svc string) {
 }
 
 func zapConfig() zap.Config {
-	return zap.NewProductionConfig()
+	return zap.NewDevelopmentConfig()
 }
 
 func zapBuild(config zap.Config) (*zap.Logger, error) {
@@ -47,6 +47,10 @@ func Errorf(msg string, args ...any) {
 
 func Fatalf(msg string, args ...any) {
 	sugarLogger.Fatalf(msg, args...)
+}
+
+func Debugf(msg string, args ...any) {
+	sugarLogger.Debugf(msg, args...)
 }
 
 func With(args map[string]any) *zap.SugaredLogger {

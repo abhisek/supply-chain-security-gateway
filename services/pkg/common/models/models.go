@@ -1,12 +1,14 @@
 package models
 
-const (
-	ArtefactSourceTypeMaven2   = "Maven"
-	ArtefactSourceTypeNpm      = "Npm"
-	ArtefactSourceTypePypi     = "PyPI"
-	ArtefactSourceTypeRubyGems = "RubyGems"
+import (
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
+)
 
-	ArtefactUpstreamAuthTypeNoAuth = "noauth"
+var (
+	ArtefactSourceTypeMaven2   = config_api.GatewayUpstreamType_Maven.String()
+	ArtefactSourceTypeNpm      = config_api.GatewayUpstreamType_Npm.String()
+	ArtefactSourceTypePypi     = config_api.GatewayUpstreamType_PyPI.String()
+	ArtefactSourceTypeRubyGems = config_api.GatewayUpstreamType_RubyGems.String()
 
 	ArtefactLicenseTypeSpdx      = "SPDX"
 	ArtefactLicenseTypeCycloneDx = "CycloneDX"

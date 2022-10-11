@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	ingressGatewayBasicAuthenticatorName = "default-basic-auth"
-	messagingAdapterNameNATS             = "nats"
-	messagingAdapterNameKafka            = "kafka"
+	ingressGatewayBasicAuthenticatorName   = "default-basic-auth"
+	ingressGatewayBasicAuthCredentialsFile = "/auth/basic-auth-credentials.txt"
+	messagingAdapterNameNATS               = "nats"
+	messagingAdapterNameKafka              = "kafka"
 )
 
 type sampleConfigGenerator struct {
@@ -64,7 +65,7 @@ func (s *sampleConfigGenerator) addDefaultGatewayAuth(gateway *config_api.Gatewa
 			Type: config_api.GatewayAuthenticationType_Basic,
 			Config: &config_api.GatewayAuthenticator_BasicAuth{
 				BasicAuth: &config_api.GatewayAuthenticatorBasicAuth{
-					Path: "data/default-basic-auth.txt",
+					Path: ingressGatewayBasicAuthCredentialsFile,
 				},
 			},
 		},

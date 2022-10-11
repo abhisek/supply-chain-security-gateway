@@ -46,11 +46,11 @@ func GetArtefactByHostAndPath(host, path string) (Artefact, error) {
 }
 
 func (s ArtefactUpStream) NeedAuthentication() bool {
-	return s.Authentication.Type != ArtefactUpstreamAuthTypeNoAuth
+	return s.Authentication.Type != config_api.GatewayAuthenticationType_NoAuth.String()
 }
 
 func (s ArtefactUpStream) NeedUpstreamAuthentication() bool {
-	return s.Repository.Authentication.Type != ArtefactUpstreamAuthTypeNoAuth
+	return s.Repository.Authentication.Type != config_api.GatewayAuthenticationType_NoAuth.String()
 }
 
 func (s ArtefactUpStream) MatchHost(host string) bool {
@@ -60,6 +60,14 @@ func (s ArtefactUpStream) MatchHost(host string) bool {
 func (s ArtefactUpStream) MatchPath(path string) bool {
 	path = utils.CleanPath(path)
 	return strings.HasPrefix(path, s.RoutingRule.Prefix)
+}
+
+func (s ArtefactUpstreamAuthentication) IsBasic() bool {
+	return s.Type == config_api.GatewayAuthenticationType_Basic.String()
+}
+
+func (s ArtefactUpstreamAuthentication) IsNoAuth() bool {
+	return s.Type == config_api.GatewayAuthenticationType_NoAuth.String()
 }
 
 // Resolve an HTTP request path for this artefact into an Artefact model
@@ -88,15 +96,15 @@ func (s ArtefactUpStream) Path2Artefact(path string) (Artefact, error) {
 // Stop gap method to map a spec based upstream into legacy upstream
 func ToUpstream(us *config_api.GatewayUpstream) ArtefactUpStream {
 	upstream := ArtefactUpStream{
-		Name: us.Name,
-		Type: us.Type.String(),
+		Name: us.GetName(),
+		Type: us.GetType().String(),
 		RoutingRule: ArtefactRoutingRule{
-			Prefix: us.Route.PathPrefix,
-			Host:   us.Route.Host,
+			Prefix: us.GetRoute().GetPathPrefix(),
+			Host:   us.GetRoute().GetHost(),
 		},
 		Authentication: ArtefactUpstreamAuthentication{
-			Type:     us.Repository.Authentication.Type.String(),
-			Provider: us.Repository.Authentication.Provider,
+			Type:     us.GetAuthentication().GetType().String(),
+			Provider: us.GetAuthentication().GetProvider(),
 		},
 	}
 

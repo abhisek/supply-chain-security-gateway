@@ -30,6 +30,7 @@ enum GatewayAuthenticationType {
   InvalidAuthType = 0;
   NoAuth = 100;
   Basic = 200;
+  OIDC = 300;
 }
 
 enum GatewaySecretSource {

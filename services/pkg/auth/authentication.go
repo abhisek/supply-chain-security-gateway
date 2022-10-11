@@ -22,10 +22,6 @@ const (
 	// Tap will lookup egress authenticators
 	AuthStageEgress = "egress" // Upstream Auth
 
-	AuthTypeNoAuth = "noauth"
-	AuthTypeBasic  = "basic"
-	AuthTypeOIDC   = "oidc"
-
 	AuthIdentityTypeAnonymous = "Anonymous"
 	AuthIdentityTypeBasicAuth = "BasicAuth"
 )
