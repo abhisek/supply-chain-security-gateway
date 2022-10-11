@@ -22,7 +22,7 @@ func NewAuthenticationProvider() AuthenticationProvider {
 
 func (a *authProvider) IngressAuthService(upstream common_models.ArtefactUpStream) (IngressAuthenticationService, error) {
 	cf := func(s func(c *config_api.GatewayAuthenticator) (IngressAuthenticationService, error)) (IngressAuthenticationService, error) {
-		cfg, err := config.Current().GetAuthenticatorByName(upstream.Authentication.Provider)
+		cfg, err := config.GetAuthenticatorByName(upstream.Authentication.Provider)
 		if err != nil {
 			return nil, err
 		}

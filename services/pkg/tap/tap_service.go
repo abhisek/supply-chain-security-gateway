@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	envoy_config_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -16,14 +15,12 @@ import (
 type tapService struct {
 	handlerChain     TapHandlerChain
 	messagingService messaging.MessagingService
-	config           *common_config.Config
 }
 
-func NewTapService(config *common_config.Config,
-	msgService messaging.MessagingService,
+func NewTapService(msgService messaging.MessagingService,
 	registrations []TapHandlerRegistration) (envoy_v3_ext_proc_pb.ExternalProcessorServer, error) {
 
-	return &tapService{config: config, messagingService: msgService,
+	return &tapService{messagingService: msgService,
 		handlerChain: TapHandlerChain{Handlers: registrations}}, nil
 }
 
@@ -62,6 +59,7 @@ func (s *tapService) Process(srv envoy_v3_ext_proc_pb.ExternalProcessor_ProcessS
 				},
 			}
 
+			// TODO: Use handler chain for applying upstream auth
 			err = s.applyUpstreamAuth(req.Request.(*envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders),
 				resp.Response.(*envoy_v3_ext_proc_pb.ProcessingResponse_RequestHeaders))
 			break

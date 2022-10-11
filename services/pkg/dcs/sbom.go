@@ -20,15 +20,12 @@ func sbomCollectorSubscription() eventSubscription[common_models.Artefact] {
 }
 
 func (s *sbomCollector) subscription() eventSubscription[common_models.Artefact] {
-	cfg, err := config.Current().GC()
-	if err != nil {
-		panic("service config is not bootstrapped")
-	}
+	cfg := config.TapServiceConfig()
 
 	return eventSubscription[common_models.Artefact]{
 		name:    sbomCollectorName,
 		group:   sbomCollectorGroupName,
-		topic:   cfg.Services.Tap.PublisherConfig.TopicNames.UpstreamRequest,
+		topic:   cfg.GetPublisherConfig().GetTopicNames().GetUpstreamRequest(),
 		handler: s.handler(),
 	}
 }

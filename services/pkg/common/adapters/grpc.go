@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -71,7 +72,7 @@ func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configu
 func GrpcMtlsClient(name, serverName, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
 	tc, err := grpcTransportCredentials(serverName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to setup client transport credentials: %w", err)
 	}
 
 	dopts = append(dopts, tc)

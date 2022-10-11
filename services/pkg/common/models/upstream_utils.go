@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 )
 
@@ -15,8 +17,12 @@ var (
 	errUnimplementedUpstreamType = errors.New("path resolver for upstream type is not implemented")
 )
 
-func GetUpstreamByHostAndPath(upstreams []ArtefactUpStream, host, path string) (ArtefactUpStream, error) {
-	for _, upstream := range upstreams {
+func GetUpstreamByHostAndPath(host, path string) (ArtefactUpStream, error) {
+	upstreams := config.Upstreams()
+
+	for _, us := range upstreams {
+		upstream := ToUpstream(us)
+
 		if upstream.MatchHost(host) && upstream.MatchPath(path) {
 			return upstream, nil
 		}
@@ -25,8 +31,12 @@ func GetUpstreamByHostAndPath(upstreams []ArtefactUpStream, host, path string) (
 	return ArtefactUpStream{}, fmt.Errorf("no upstream resolved using %s/%s", host, path)
 }
 
-func GetArtefactByHostAndPath(upstreams []ArtefactUpStream, host, path string) (Artefact, error) {
-	for _, upstream := range upstreams {
+func GetArtefactByHostAndPath(host, path string) (Artefact, error) {
+	upstreams := config.Upstreams()
+
+	for _, us := range upstreams {
+		upstream := ToUpstream(us)
+
 		if upstream.MatchHost(host) && upstream.MatchPath(path) {
 			return upstream.Path2Artefact(path)
 		}
@@ -44,7 +54,7 @@ func (s ArtefactUpStream) NeedUpstreamAuthentication() bool {
 }
 
 func (s ArtefactUpStream) MatchHost(host string) bool {
-	return (s.RoutingRule.Host == host)
+	return (utils.IsEmptyString(s.RoutingRule.Host)) || (s.RoutingRule.Host == host)
 }
 
 func (s ArtefactUpStream) MatchPath(path string) bool {
@@ -73,6 +83,24 @@ func (s ArtefactUpStream) Path2Artefact(path string) (Artefact, error) {
 	default:
 		return Artefact{}, errUnimplementedUpstreamType
 	}
+}
+
+// Stop gap method to map a spec based upstream into legacy upstream
+func ToUpstream(us *config_api.GatewayUpstream) ArtefactUpStream {
+	upstream := ArtefactUpStream{
+		Name: us.Name,
+		Type: us.Type.String(),
+		RoutingRule: ArtefactRoutingRule{
+			Prefix: us.Route.PathPrefix,
+			Host:   us.Route.Host,
+		},
+		Authentication: ArtefactUpstreamAuthentication{
+			Type:     us.Repository.Authentication.Type.String(),
+			Provider: us.Repository.Authentication.Provider,
+		},
+	}
+
+	return upstream
 }
 
 func artefactForPypi(parts []string) (Artefact, error) {

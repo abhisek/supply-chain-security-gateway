@@ -24,7 +24,7 @@ func main() {
 	tracerShutDown := obs.InitTracing()
 	defer tracerShutDown(context.Background())
 
-	policyDataService, err := pdp.NewPolicyDataServiceClient(config.Current().PdpServiceConfig().GetPdsClient())
+	policyDataService, err := pdp.NewPolicyDataServiceClient(config.PdpServiceConfig().GetPdsClient())
 	if err != nil {
 		logger.Fatalf("Failed to create policy data service client: %v", err)
 	}
@@ -46,8 +46,8 @@ func main() {
 }
 
 func buildMessagingService() (messaging.MessagingService, error) {
-	cfg := config.Current().PdpServiceConfig()
-	messageAdapter, err := config.Current().GetMessagingConfigByName(cfg.PublisherConfig.MessagingAdapterName)
+	cfg := config.PdpServiceConfig()
+	messageAdapter, err := config.GetMessagingConfigByName(cfg.PublisherConfig.MessagingAdapterName)
 	if err != nil {
 		return nil, err
 	}

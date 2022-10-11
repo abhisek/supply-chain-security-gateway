@@ -1,11 +1,11 @@
 package secrets
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 )
 
 const (
@@ -33,34 +33,36 @@ func initCache() {
 	log.Printf("Initializing secrets cache")
 }
 
-func getSecret(secret common_config.SecretConfig, evictCache bool) (string, error) {
+func getSecret(key string, evictCache bool) (string, error) {
+	s, err := config.GetSecret(key)
+	if err != nil {
+		return "", err
+	}
+
 	if evictCache {
 		// TODO: Evict the cache
 	}
 
 	// TODO: Lookup cache
 
-	a, err := resolveProvider(secret.Source)
+	a, err := resolveProvider(s.Source)
 	if err != nil {
 		return "", err
 	}
 
-	return a.GetSecret(secret.Key)
+	// FIXME: Refactor the secret provider interface
+	return a.GetSecret(s.GetEnvironment().Key)
 }
 
-func resolveProvider(name string) (SecretProvider, error) {
-	switch name {
-	case SecretProviderEnv:
+func resolveProvider(src config_api.GatewaySecretSource) (SecretProvider, error) {
+	switch src {
+	case config_api.GatewaySecretSource_Environment:
 		return NewEnvSecretProvider()
 	default:
-		return nil, fmt.Errorf("provider not found for %s", name)
+		return nil, fmt.Errorf("provider not found for %s", src.String())
 	}
 }
 
-func GetSecret(secret common_config.SecretConfig) (string, error) {
-	return getSecret(secret, false)
-}
-
-func Resolve(id string, config *common_config.Config) (common_config.SecretConfig, error) {
-	return common_config.SecretConfig{}, errors.New("unimplemented")
+func GetSecret(key string) (string, error) {
+	return getSecret(key, false)
 }

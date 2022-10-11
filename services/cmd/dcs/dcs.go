@@ -21,8 +21,8 @@ func main() {
 	tracerShutDown := obs.InitTracing()
 	defer tracerShutDown(context.Background())
 
-	msgAdapter, err := config.Current().
-		GetMessagingConfigByName(config.Current().
+	msgAdapter, err := config.
+		GetMessagingConfigByName(config.
 			DcsServiceConfig().GetMessagingAdapterName())
 	if err != nil {
 		logger.Fatalf("Failed to get messaging adapter config")

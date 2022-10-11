@@ -18,3 +18,17 @@ func findHeaderValue(req *envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders,
 
 	return "", fmt.Errorf("header with key: %s not found", key)
 }
+
+func findHostAndPath(req *envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders) (string, string, error) {
+	path, err := findHeaderValue(req, "path")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to find path in req: %w", err)
+	}
+
+	host, err := findHeaderValue(req, "host")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to find host in req: %w", err)
+	}
+
+	return host, path, nil
+}

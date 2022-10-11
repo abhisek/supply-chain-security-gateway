@@ -125,9 +125,9 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 		return &envoy_service_auth_v3.CheckResponse{}, err
 	}
 
-	gatewayDeny := !config.Current().PdpServiceConfig().MonitorMode && !policyRespose.Allowed()
+	gatewayDeny := !isMonitorMode() && !policyRespose.Allowed()
 	s.publishDecisionEvent(exCtx, pdsResponse, !gatewayDeny,
-		config.Current().PdpServiceConfig().MonitorMode, policyRespose, enrichmentErr)
+		isMonitorMode(), policyRespose, enrichmentErr)
 
 	if gatewayDeny {
 		logger.Infof("Policy denied upstream request")
@@ -156,7 +156,7 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 
 func (s *authorizationService) resolveRequestedArtefact(req *envoy_service_auth_v3.AttributeContext_HttpRequest) (common_models.Artefact,
 	common_models.ArtefactUpStream, error) {
-	for _, us := range config.Current().Upstreams() {
+	for _, us := range config.Upstreams() {
 		upstream := toLegacyUpstream(us)
 		if upstream.MatchPath(req.Path) {
 			a, err := upstream.Path2Artefact(req.Path)
@@ -257,7 +257,7 @@ func (s *authorizationService) publishDecisionEvent(ctx *extendedContext,
 
 	logger.With("event", event).Info("Event published")
 
-	topic := config.Current().PdpServiceConfig().PublisherConfig.TopicNames.PolicyAudit
+	topic := config.PdpServiceConfig().PublisherConfig.TopicNames.PolicyAudit
 	err := s.messagingService.Publish(topic, event)
 	if err != nil {
 		logger.Infof("[ERROR] Failed to publish audit event to topic: %s err: %v", topic, err)

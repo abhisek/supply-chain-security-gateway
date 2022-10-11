@@ -10,13 +10,12 @@ import (
 func (s *tapService) applyUpstreamAuth(req *envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders,
 	resp *envoy_v3_ext_proc_pb.ProcessingResponse_RequestHeaders) error {
 
-	path, err := findHeaderValue(req, "path")
+	host, path, err := findHostAndPath(req)
 	if err != nil {
 		return err
 	}
 
-	upstream, err := common_models.GetUpstreamByHostAndPath(s.config.Global.Upstreams,
-		"", path)
+	upstream, err := common_models.GetUpstreamByHostAndPath(host, path)
 	if err != nil {
 		return err
 	}
