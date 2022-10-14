@@ -21,6 +21,7 @@ var (
 const (
 	commandValidateConf       = "validate"
 	commandGenerateSampleConf = "generate-sample"
+	commandGenerateEnvoyConf  = "generate-envoy"
 )
 
 type commandHandler func() error
@@ -32,6 +33,9 @@ var (
 		},
 		commandGenerateSampleConf: func() error {
 			return generateSampleConfCommand()
+		},
+		commandGenerateEnvoyConf: func() error {
+			return generateEnvoyConfigCommand()
 		},
 	}
 )
@@ -63,7 +67,10 @@ func main() {
 		logger.Fatalf("Unknown command: %s", command)
 	}
 
-	ch()
+	err := ch()
+	if err != nil {
+		logger.Errorf("Command exec returned error: %v", err)
+	}
 }
 
 func validateConfigCommand() error {
@@ -83,4 +90,8 @@ func validateConfigCommand() error {
 
 func generateSampleConfCommand() error {
 	return newSampleConfigGenerator(fileRepoPath).generate()
+}
+
+func generateEnvoyConfigCommand() error {
+	return newEnvoyConfigGenerator(fileRepoPath).generate()
 }

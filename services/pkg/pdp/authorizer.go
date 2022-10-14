@@ -84,9 +84,10 @@ func (s *authorizationService) checkInternal(ctx context.Context,
 		return s.authenticationChallenge(exCtx, upstream, httpReq)
 	}
 
-	exCtx.WithArtefact(upstreamArtefact)
-	exCtx.WithUpstream(upstream)
-	exCtx.WithAuthIdentity(identity)
+	exCtx.
+		WithArtefact(upstreamArtefact).
+		WithUpstream(upstream).
+		WithAuthIdentity(identity)
 
 	var pdsResponse PolicyDataServiceResponse
 	var enrichmentErr error
