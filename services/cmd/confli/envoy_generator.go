@@ -3,17 +3,23 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/abhisek/supply-chain-gateway/services/gen"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	envoy_cluster_v3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	envoy_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	envoy_endpoint_v3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	envoy_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	envoy_extension_tls_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+
 	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 )
 
 /**
@@ -88,7 +94,103 @@ func apiGenerateEnvoyConfig(gateway *gen.GatewayConfiguration) (*envoy_bootstrap
 		},
 	}
 
+	listener, err := envoyGenerateStaticListener(gateway)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generated static listener: %w", err)
+	}
+
+	clusters, err := envoyGenerateStaticClusters(gateway)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate static clusters: %w", err)
+	}
+
+	bootstrap.StaticResources.Listeners = append(bootstrap.StaticResources.Listeners, listener)
+	bootstrap.StaticResources.Clusters = append(bootstrap.StaticResources.Clusters, clusters...)
+
 	return &bootstrap, nil
+}
+
+func envoyGenerateStaticListener(gateway *gen.GatewayConfiguration) (*envoy_listener_v3.Listener, error) {
+	listener := &envoy_listener_v3.Listener{
+		Address: &envoy_core_v3.Address{
+			Address: &envoy_core_v3.Address_SocketAddress{
+				SocketAddress: &envoy_core_v3.SocketAddress{
+					Address:       gateway.Listener.Host,
+					PortSpecifier: &envoy_core_v3.SocketAddress_PortValue{PortValue: gateway.Listener.Port},
+				},
+			},
+		},
+	}
+
+	return listener, nil
+}
+
+func envoyGenerateStaticClusters(gateway *gen.GatewayConfiguration) ([]*envoy_cluster_v3.Cluster, error) {
+	clusters := make([]*envoy_cluster_v3.Cluster, 0)
+
+	for _, upstream := range gateway.Upstreams {
+		cluster := &envoy_cluster_v3.Cluster{
+			Name:            upstream.Name,
+			DnsLookupFamily: envoy_cluster_v3.Cluster_V4_ONLY,
+			LoadAssignment: &envoy_endpoint_v3.ClusterLoadAssignment{
+				ClusterName: upstream.Name,
+				Endpoints:   make([]*envoy_endpoint_v3.LocalityLbEndpoints, 0),
+			},
+			TransportSocket: &envoy_core_v3.TransportSocket{},
+		}
+
+		endpoint := &envoy_endpoint_v3.LocalityLbEndpoints{
+			LbEndpoints: make([]*envoy_endpoint_v3.LbEndpoint, 0),
+		}
+
+		portValue, err := strconv.Atoi(upstream.Repository.Port)
+		if err != nil {
+			return clusters, fmt.Errorf("failed to convert port from string to uint: %w", err)
+		}
+
+		lb_endpoint := &envoy_endpoint_v3.LbEndpoint{
+			HostIdentifier: &envoy_endpoint_v3.LbEndpoint_Endpoint{
+				Endpoint: &envoy_endpoint_v3.Endpoint{
+					Address: &envoy_core_v3.Address{
+						Address: &envoy_core_v3.Address_SocketAddress{
+							SocketAddress: &envoy_core_v3.SocketAddress{
+								Address:       upstream.Repository.Host,
+								PortSpecifier: &envoy_core_v3.SocketAddress_PortValue{PortValue: uint32(portValue)},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		endpoint.LbEndpoints = append(endpoint.LbEndpoints, lb_endpoint)
+		cluster.LoadAssignment.Endpoints = append(cluster.LoadAssignment.Endpoints, endpoint)
+
+		upstreamTlsTypeConfig := &envoy_extension_tls_v3.UpstreamTlsContext{
+			Sni: upstream.Repository.Sni,
+		}
+
+		upstreamTlsTypeConfigBinary, err := proto.Marshal(upstreamTlsTypeConfig)
+		if err != nil {
+			return clusters, fmt.Errorf("failed to serialize to binary: %w", err)
+		}
+
+		if upstream.Repository.Tls {
+			cluster.TransportSocket = &envoy_core_v3.TransportSocket{
+				Name: "envoy.transport_sockets.tls",
+				ConfigType: &envoy_core_v3.TransportSocket_TypedConfig{
+					TypedConfig: &anypb.Any{
+						TypeUrl: "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
+						Value:   upstreamTlsTypeConfigBinary,
+					},
+				},
+			}
+		}
+
+		clusters = append(clusters, cluster)
+	}
+
+	return clusters, nil
 }
 
 func envoyNodeId(gid string) string {

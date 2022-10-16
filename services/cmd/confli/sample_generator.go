@@ -28,6 +28,7 @@ func (s *sampleConfigGenerator) generate() error {
 	gateway := &config_api.GatewayConfiguration{}
 
 	s.addInfo(gateway)
+	s.addListener(gateway)
 	s.addDefaultUpstreams(gateway)
 	s.addDefaultGatewayAuth(gateway)
 	s.addMessaging(gateway)
@@ -49,6 +50,13 @@ func (s *sampleConfigGenerator) printConfig(gateway *config_api.GatewayConfigura
 	}
 
 	os.Stdout.Write([]byte(data))
+}
+
+func (s *sampleConfigGenerator) addListener(gateway *config_api.GatewayConfiguration) {
+	gateway.Listener = &config_api.GatewayConfiguration_Listener{
+		Host: "0.0.0.0",
+		Port: 10000,
+	}
 }
 
 func (s *sampleConfigGenerator) addInfo(gateway *config_api.GatewayConfiguration) {
