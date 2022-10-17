@@ -18,6 +18,8 @@ import (
 	envoy_endpoint_v3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	envoy_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	envoy_route_v3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	envoy_extension_extauth_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoy_extension_extproc_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
 	envoy_extension_http_connection_manager_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	envoy_extension_tls_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	envoy_extension_http_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
@@ -29,7 +31,7 @@ import (
 const (
 	pdpSvcName  = "ext-authz-pdp"
 	pdpHostName = "pdp"
-	PdpPort     = "9001"
+	PdpPort     = "9000"
 
 	tapSvcName  = "ext-proc-tap"
 	tapHostName = "tap"
@@ -149,6 +151,7 @@ func envoyGenerateStaticListener(gateway *gen.GatewayConfiguration) (*envoy_list
 		RouteSpecifier: &envoy_extension_http_connection_manager_v3.HttpConnectionManager_RouteConfig{
 			RouteConfig: routeConfig,
 		},
+		HttpFilters: make([]*envoy_extension_http_connection_manager_v3.HttpFilter, 0),
 	}
 
 	vhosts := &envoy_route_v3.VirtualHost{
@@ -185,6 +188,27 @@ func envoyGenerateStaticListener(gateway *gen.GatewayConfiguration) (*envoy_list
 	}
 
 	routeConfig.VirtualHosts = append(routeConfig.VirtualHosts, vhosts)
+
+	extProcFilter, err := envoyGetExtProcFilter()
+	if err != nil {
+		return nil, err
+	}
+
+	extAuthFilter, err := envoyGetExtAuthFilter()
+	if err != nil {
+		return nil, err
+	}
+
+	routerFilter, err := envoyGetHttpRouterFilter()
+	if err != nil {
+		return nil, err
+	}
+
+	// The order of HTTP filter is important
+	http_connection_manager.HttpFilters = append(http_connection_manager.HttpFilters, extProcFilter)
+	http_connection_manager.HttpFilters = append(http_connection_manager.HttpFilters, extAuthFilter)
+	http_connection_manager.HttpFilters = append(http_connection_manager.HttpFilters, routerFilter)
+
 	data, err := proto.Marshal(http_connection_manager)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize http connection manager: %w", err)
@@ -210,12 +234,95 @@ func envoyGenerateStaticListener(gateway *gen.GatewayConfiguration) (*envoy_list
 	return listener, nil
 }
 
+func envoyGetHttpRouterFilter() (*envoy_extension_http_connection_manager_v3.HttpFilter, error) {
+	return &envoy_extension_http_connection_manager_v3.HttpFilter{
+		Name: "envoy.filters.http.router",
+	}, nil
+}
+
+func envoyGetExtAuthFilter() (*envoy_extension_http_connection_manager_v3.HttpFilter, error) {
+	extAuthFilter := envoy_extension_extauth_v3.ExtAuthz{
+		TransportApiVersion:    envoy_core_v3.ApiVersion_V3,
+		FailureModeAllow:       false,
+		IncludePeerCertificate: true,
+		WithRequestBody: &envoy_extension_extauth_v3.BufferSettings{
+			MaxRequestBytes:     8192,
+			AllowPartialMessage: true,
+			PackAsBytes:         true,
+		},
+		Services: &envoy_extension_extauth_v3.ExtAuthz_GrpcService{
+			GrpcService: &envoy_core_v3.GrpcService{
+				TargetSpecifier: &envoy_core_v3.GrpcService_EnvoyGrpc_{
+					EnvoyGrpc: &envoy_core_v3.GrpcService_EnvoyGrpc{ClusterName: pdpSvcName},
+				},
+			},
+		},
+	}
+
+	data, err := proto.Marshal(&extAuthFilter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal extauth message: %w", err)
+	}
+
+	filter := &envoy_extension_http_connection_manager_v3.HttpFilter{
+		Name: "envoy.filters.http.ext_authz",
+		ConfigType: &envoy_extension_http_connection_manager_v3.HttpFilter_TypedConfig{
+			TypedConfig: &anypb.Any{
+				TypeUrl: "type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz",
+				Value:   data,
+			},
+		},
+	}
+
+	return filter, nil
+}
+
+func envoyGetExtProcFilter() (*envoy_extension_http_connection_manager_v3.HttpFilter, error) {
+	extProc := &envoy_extension_extproc_v3.ExternalProcessor{
+		FailureModeAllow: true,
+		AsyncMode:        true,
+		GrpcService: &envoy_core_v3.GrpcService{
+			TargetSpecifier: &envoy_core_v3.GrpcService_EnvoyGrpc_{
+				EnvoyGrpc: &envoy_core_v3.GrpcService_EnvoyGrpc{ClusterName: tapSvcName},
+			},
+		},
+		ProcessingMode: &envoy_extension_extproc_v3.ProcessingMode{
+			RequestHeaderMode:   envoy_extension_extproc_v3.ProcessingMode_SEND,
+			ResponseHeaderMode:  envoy_extension_extproc_v3.ProcessingMode_SEND,
+			RequestBodyMode:     envoy_extension_extproc_v3.ProcessingMode_NONE,
+			ResponseBodyMode:    envoy_extension_extproc_v3.ProcessingMode_NONE,
+			RequestTrailerMode:  envoy_extension_extproc_v3.ProcessingMode_SKIP,
+			ResponseTrailerMode: envoy_extension_extproc_v3.ProcessingMode_SKIP,
+		},
+	}
+
+	data, err := proto.Marshal(extProc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal extproc message: %w", err)
+	}
+
+	filter := &envoy_extension_http_connection_manager_v3.HttpFilter{
+		Name: "envoy.filters.http.ext_proc",
+		ConfigType: &envoy_extension_http_connection_manager_v3.HttpFilter_TypedConfig{
+			TypedConfig: &anypb.Any{
+				TypeUrl: "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor",
+				Value:   data,
+			},
+		},
+	}
+
+	return filter, nil
+}
+
 func envoyGenerateStaticClusters(gateway *gen.GatewayConfiguration) ([]*envoy_cluster_v3.Cluster, error) {
 	clusters := make([]*envoy_cluster_v3.Cluster, 0)
 
 	for _, upstream := range gateway.Upstreams {
 		cluster := &envoy_cluster_v3.Cluster{
-			Name:            upstream.Name,
+			Name: upstream.Name,
+			ClusterDiscoveryType: &envoy_cluster_v3.Cluster_Type{
+				Type: envoy_cluster_v3.Cluster_LOGICAL_DNS,
+			},
 			DnsLookupFamily: envoy_cluster_v3.Cluster_V4_ONLY,
 			LoadAssignment: &envoy_endpoint_v3.ClusterLoadAssignment{
 				ClusterName: upstream.Name,
@@ -295,6 +402,10 @@ func envoyGenerateStaticClusters(gateway *gen.GatewayConfiguration) ([]*envoy_cl
 func envoyGetInternalServiceCluster(svcName, hostName, port string) (*envoy_cluster_v3.Cluster, error) {
 	cluster := &envoy_cluster_v3.Cluster{
 		Name: svcName,
+		ClusterDiscoveryType: &envoy_cluster_v3.Cluster_Type{
+			Type: envoy_cluster_v3.Cluster_LOGICAL_DNS,
+		},
+		DnsLookupFamily: envoy_cluster_v3.Cluster_V4_ONLY,
 		LoadAssignment: &envoy_endpoint_v3.ClusterLoadAssignment{
 			ClusterName: svcName,
 			Endpoints:   make([]*envoy_endpoint_v3.LocalityLbEndpoints, 0),
