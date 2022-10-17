@@ -9,6 +9,7 @@ import (
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
@@ -16,6 +17,8 @@ import (
 	envoy_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_endpoint_v3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	envoy_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	envoy_route_v3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	envoy_extension_http_connection_manager_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	envoy_extension_tls_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	envoy_extension_http_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 
@@ -131,7 +134,78 @@ func envoyGenerateStaticListener(gateway *gen.GatewayConfiguration) (*envoy_list
 				},
 			},
 		},
+		FilterChains: make([]*envoy_listener_v3.FilterChain, 0),
 	}
+
+	routeConfig := &envoy_route_v3.RouteConfiguration{
+		Name:                 "local_route",
+		VirtualHosts:         make([]*envoy_route_v3.VirtualHost, 0),
+		ResponseHeadersToAdd: make([]*envoy_core_v3.HeaderValueOption, 0),
+		RequestHeadersToAdd:  make([]*envoy_core_v3.HeaderValueOption, 0),
+	}
+
+	http_connection_manager := &envoy_extension_http_connection_manager_v3.HttpConnectionManager{
+		StatPrefix: "ingress_http",
+		RouteSpecifier: &envoy_extension_http_connection_manager_v3.HttpConnectionManager_RouteConfig{
+			RouteConfig: routeConfig,
+		},
+	}
+
+	vhosts := &envoy_route_v3.VirtualHost{
+		Name:    "catch_all_vhost",
+		Domains: []string{"*"},
+		Routes:  make([]*envoy_route_v3.Route, 0),
+	}
+
+	for _, upstream := range gateway.Upstreams {
+		route := &envoy_route_v3.Route{
+			Match: &envoy_route_v3.RouteMatch{
+				PathSpecifier: &envoy_route_v3.RouteMatch_Prefix{
+					Prefix: upstream.Route.PathPrefix,
+				},
+			},
+			Action: &envoy_route_v3.Route_Route{
+				Route: &envoy_route_v3.RouteAction{
+					Timeout: &durationpb.Duration{
+						Seconds: 0,
+						Nanos:   0,
+					},
+					ClusterSpecifier: &envoy_route_v3.RouteAction_Cluster{
+						Cluster: upstream.Name,
+					},
+					HostRewriteSpecifier: &envoy_route_v3.RouteAction_HostRewriteLiteral{
+						HostRewriteLiteral: upstream.Repository.Host,
+					},
+					PrefixRewrite: upstream.Route.PathPrefixRewriteValue,
+				},
+			},
+		}
+
+		vhosts.Routes = append(vhosts.Routes, route)
+	}
+
+	routeConfig.VirtualHosts = append(routeConfig.VirtualHosts, vhosts)
+	data, err := proto.Marshal(http_connection_manager)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize http connection manager: %w", err)
+	}
+
+	filterChain := &envoy_listener_v3.FilterChain{
+		Filters: make([]*envoy_listener_v3.Filter, 0),
+	}
+
+	filter := &envoy_listener_v3.Filter{
+		Name: "envoy.filters.network.http_connection_manager",
+		ConfigType: &envoy_listener_v3.Filter_TypedConfig{
+			TypedConfig: &anypb.Any{
+				TypeUrl: "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+				Value:   data,
+			},
+		},
+	}
+
+	filterChain.Filters = append(filterChain.Filters, filter)
+	listener.FilterChains = append(listener.FilterChains, filterChain)
 
 	return listener, nil
 }

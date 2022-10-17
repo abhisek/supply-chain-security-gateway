@@ -91,6 +91,9 @@ func (s *sampleConfigGenerator) addDefaultUpstreams(gateway *config_api.GatewayC
 	gateway.Upstreams = append(gateway.Upstreams, s.getUpstream("gradle-plugins", config_api.GatewayUpstreamType_Maven,
 		config_api.GatewayUpstreamManagementType_GatewayAdmin, "/gradle-plugins/m2", "/m2",
 		"plugins.gradle.org", "443"))
+
+	gateway.Upstreams = append(gateway.Upstreams, s.getUpstream("pypi_org", config_api.GatewayUpstreamType_PyPI,
+		config_api.GatewayUpstreamManagementType_GatewayAdmin, "/pypi", "/pypi", "pypi.org", "443"))
 }
 
 func (s *sampleConfigGenerator) addMessaging(gateway *config_api.GatewayConfiguration) {
