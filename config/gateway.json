@@ -1,8 +1,12 @@
 {
   "info": {
-    "id": "01GF2NFDBEB9NREP41XETXW2WF",
+    "id": "01GFJE3RN787D1NGW4VJEQ07HT",
     "name": "localhost",
     "domain": "localhost"
+  },
+  "listener": {
+    "host": "0.0.0.0",
+    "port": 10000
   },
   "upstreams": [
     {
@@ -46,6 +50,29 @@
         "port": "443",
         "tls": true,
         "sni": "plugins.gradle.org",
+        "authentication": {
+
+        }
+      }
+    },
+    {
+      "type": "PyPI",
+      "managementType": "GatewayAdmin",
+      "name": "pypi_org",
+      "authentication": {
+        "type": "Basic",
+        "provider": "default-basic-auth"
+      },
+      "route": {
+        "pathPrefix": "/pypi",
+        "hostRewriteValue": "pypi.org",
+        "pathPrefixRewriteValue": "/pypi"
+      },
+      "repository": {
+        "host": "pypi.org",
+        "port": "443",
+        "tls": true,
+        "sni": "pypi.org",
         "authentication": {
 
         }

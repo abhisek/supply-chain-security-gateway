@@ -1,6 +1,6 @@
 {
   "node": {
-    "id": "01GFJE3RN787D1NGW4VJEQ07HT--01GFJSV6K7P992M5E8CXY1ZX5N",
+    "id": "01GFJE3RN787D1NGW4VJEQ07HT--01GFN3R14TMD6BVHFHCZ9Q594H",
     "cluster": "localhost",
     "metadata": {
         "domain": "localhost"
@@ -109,6 +109,14 @@
                     },
                     {
                       "name": "envoy.filters.http.router"
+                    }
+                  ],
+                  "accessLog": [
+                    {
+                      "name": "envoy.access_loggers.stdout",
+                      "typedConfig": {
+                        "@type": "type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog"
+                      }
                     }
                   ]
                 }

@@ -12,12 +12,14 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	envoy_accesslog_v3 "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	envoy_bootstrap_v3 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v3"
 	envoy_cluster_v3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	envoy_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_endpoint_v3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	envoy_listener_v3 "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	envoy_route_v3 "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	_ "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/stream/v3"
 	envoy_extension_extauth_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	envoy_extension_extproc_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
 	envoy_extension_http_connection_manager_v3 "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
@@ -152,6 +154,17 @@ func envoyGenerateStaticListener(gateway *gen.GatewayConfiguration) (*envoy_list
 			RouteConfig: routeConfig,
 		},
 		HttpFilters: make([]*envoy_extension_http_connection_manager_v3.HttpFilter, 0),
+		AccessLog: []*envoy_accesslog_v3.AccessLog{
+			{
+				Name: "envoy.access_loggers.stdout",
+				ConfigType: &envoy_accesslog_v3.AccessLog_TypedConfig{
+					TypedConfig: &anypb.Any{
+						TypeUrl: "type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog",
+						Value:   []byte{},
+					},
+				},
+			},
+		},
 	}
 
 	vhosts := &envoy_route_v3.VirtualHost{
