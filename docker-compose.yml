@@ -2,9 +2,9 @@ version: "3.3"
 services:
   envoy:
     image: envoyproxy/envoy:v1.21.1
-    command: envoy -c /config/envoy.yml
+    command: envoy -c /config/envoy.json
     volumes:
-      - ${BOOTSTRAP_ENVOY_FILE:-./config/envoy.yml}:/config/envoy.yml
+      - ${BOOTSTRAP_ENVOY_FILE:-./config/envoy.json}:/config/envoy.json
     ports:
       - "10000:10000"
   mysql-server:
@@ -30,14 +30,14 @@ services:
     build: ./services
     command: pdp-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
       - ${BOOTSTRAP_BASIC_AUTH_FILE:-./config/gateway-auth-basic.txt}:/auth/basic-auth-credentials.txt
       - ./policies:/policies
       - ./pki/pdp/server.crt:/config/pki/server.crt
       - ./pki/pdp/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
-      GLOBAL_CONFIG_PATH: /config/global.yml
+      GLOBAL_CONFIG_PATH: /config/gateway.json
       PDP_POLICY_PATH: /policies
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
@@ -56,12 +56,12 @@ services:
     build: ./services
     command: tap-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
       - ./pki/tap/server.crt:/config/pki/server.crt
       - ./pki/tap/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
-      GLOBAL_CONFIG_PATH: /config/global.yml
+      GLOBAL_CONFIG_PATH: /config/gateway.json
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
@@ -77,12 +77,12 @@ services:
       replicas: ${DCS_REPLICA_COUNT:-1}
     command: dcs-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
       - ./pki/dcs/server.crt:/config/pki/server.crt
       - ./pki/dcs/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
-      GLOBAL_CONFIG_PATH: /config/global.yml
+      GLOBAL_CONFIG_PATH: /config/gateway.json
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
@@ -104,12 +104,12 @@ services:
       replicas: ${PDS_REPLICA_COUNT:-1}
     command: pds-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
       - ./pki/pds/server.crt:/config/pki/server.crt
       - ./pki/pds/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
-      GLOBAL_CONFIG_PATH: /config/global.yml
+      GLOBAL_CONFIG_PATH: /config/gateway.json
       PDS_SERVER_NAME: pds
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key

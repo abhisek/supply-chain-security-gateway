@@ -1,0 +1,110 @@
+{
+  "info": {
+    "id": "01GF2NFDBEB9NREP41XETXW2WF",
+    "name": "localhost",
+    "domain": "localhost"
+  },
+  "upstreams": [
+    {
+      "type": "Maven",
+      "managementType": "GatewayAdmin",
+      "name": "maven-central",
+      "authentication": {
+        "type": "Basic",
+        "provider": "default-basic-auth"
+      },
+      "route": {
+        "pathPrefix": "/maven2",
+        "hostRewriteValue": "repo.maven.apache.org",
+        "pathPrefixRewriteValue": "/maven2"
+      },
+      "repository": {
+        "host": "repo.maven.apache.org",
+        "port": "443",
+        "tls": true,
+        "sni": "repo.maven.apache.org",
+        "authentication": {
+
+        }
+      }
+    },
+    {
+      "type": "Maven",
+      "managementType": "GatewayAdmin",
+      "name": "gradle-plugins",
+      "authentication": {
+        "type": "Basic",
+        "provider": "default-basic-auth"
+      },
+      "route": {
+        "pathPrefix": "/gradle-plugins/m2",
+        "hostRewriteValue": "plugins.gradle.org",
+        "pathPrefixRewriteValue": "/m2"
+      },
+      "repository": {
+        "host": "plugins.gradle.org",
+        "port": "443",
+        "tls": true,
+        "sni": "plugins.gradle.org",
+        "authentication": {
+
+        }
+      }
+    }
+  ],
+  "authenticators": {
+    "default-basic-auth": {
+      "type": "Basic",
+      "basicAuth": {
+        "path": "/auth/basic-auth-credentials.txt"
+      }
+    }
+  },
+  "messaging": {
+    "kafka": {
+      "type": "KAFKA",
+      "kafka": {
+        "bootstrapServers": [
+          "kafka-host:9092"
+        ],
+        "schemaRegistryUrl": "http://kafka-host:8081"
+      }
+    },
+    "nats": {
+      "nats": {
+        "url": "tls://nats-server:4222"
+      }
+    }
+  },
+  "services": {
+    "pdp": {
+      "monitorMode": true,
+      "pdsClient": {
+        "common": {
+          "host": "pds",
+          "port": 9002,
+          "mtls": true
+        }
+      },
+      "publisherConfig": {
+        "messagingAdapterName": "nats",
+        "topicNames": {
+          "policyAudit": "gateway.pdp.audits"
+        }
+      }
+    },
+    "tap": {
+      "publisherConfig": {
+        "messagingAdapterName": "nats",
+        "topicNames": {
+          "upstreamRequest": "gateway.tap.upstream_req",
+          "upstreamResponse": "gateway.tap.upstream_res"
+        }
+      }
+    },
+    "dcs": {
+      "active": true,
+      "messagingAdapterName": "nats"
+    }
+  }
+}
