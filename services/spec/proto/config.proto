@@ -167,11 +167,11 @@ message PdsClientConfig {
 message PdpServiceConfig {
   message PublisherConfig {
     message TopicNames {
-      string policy_audit = 1;
+      string policy_audit = 1 [(validate.rules).string = {min_len: 3, max_len: 255}];
     }
 
-    string messaging_adapter_name = 1;
-    TopicNames topic_names = 2;
+    string messaging_adapter_name = 1 [(validate.rules).string = {min_len: 3, max_len: 255}];
+    TopicNames topic_names = 2 [(validate.rules).message.required = true];
   }
 
   bool monitor_mode = 1;
@@ -189,19 +189,19 @@ message DcsServiceConfig {
 
   // TODO: Introduce storage configurations similar to messaging
   // Services can refer to the config by name
-  string storage_adapter_config_name = 3;
+  string storage_adapter_config_name = 3; // [(validate.rules).string = {min_len: 3, max_len: 255}]
 
-  string messaging_adapter_name = 4;
+  string messaging_adapter_name = 4 [(validate.rules).string = {min_len: 3, max_len: 255}];
 }
 
 message GatewayConfiguration {
   message Listener {
-    string host = 1;
-    uint32 port = 2;
+    string host = 1 [(validate.rules).string = {min_len: 7, max_len: 255}];
+    uint32 port = 2 [(validate.rules).uint32.lt = 65535];
   }
 
-  GatewayInfo info = 1;
-  Listener listener = 2;
+  GatewayInfo info = 1 [(validate.rules).message.required = true];
+  Listener listener = 2 [(validate.rules).message.required = true];
   repeated GatewayUpstream upstreams = 3;
   map<string, GatewayAuthenticator> authenticators = 4;
   map<string, GatewaySecret> secrets = 5;
@@ -213,5 +213,5 @@ message GatewayConfiguration {
     DcsServiceConfig dcs = 3;
   }
 
-  ServiceConfig services = 7;
+  ServiceConfig services = 7 [(validate.rules).message.required = true];
 }
