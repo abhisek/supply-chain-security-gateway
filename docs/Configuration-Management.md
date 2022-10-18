@@ -45,7 +45,13 @@ Every service has a bootstrap configuration which is minimal and allows it to di
 
 ```
 BOOTSTRAP_CONFIGURATION_REPOSITORY_TYPE=file
-BOOTSTRAP_CONFIGURATION_REPOSITORY_PATH=/path/to/config.yml
+BOOTSTRAP_CONFIGURATION_REPOSITORY_PATH=/path/to/config.json
+```
+
+or using following environment variable which implicitly assumes file based config repository
+
+```
+GLOBAL_CONFIG_PATH=/path/to/gateway.json
 ```
 
 ### Configuration API
@@ -53,8 +59,7 @@ BOOTSTRAP_CONFIGURATION_REPOSITORY_PATH=/path/to/config.yml
 The `config` common module should be initialized and subsequently can be used for obtaining currently loaded configurations:
 
 ```go
-conf := config.CurrentConfiguration()
-if conf.PdpService.MonitorMode() {
+if config.PdpServiceConfig.MonitorMode() {
   // Do something
 }
 ```
