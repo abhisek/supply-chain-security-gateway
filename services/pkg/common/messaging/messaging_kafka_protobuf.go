@@ -53,6 +53,7 @@ func (svc *kafkaMessagingService) deliveryEventHandler() {
 		m, ok := msg.(*kafka.Message)
 		if !ok {
 			log.Printf("[ERROR] Failed to cast msg to kafka.Message in delivery channel handler")
+			continue
 		}
 
 		if m.TopicPartition.Error != nil {
