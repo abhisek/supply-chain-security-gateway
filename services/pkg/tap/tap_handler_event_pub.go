@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 
@@ -13,32 +13,36 @@ import (
 )
 
 type tapEventPublisher struct {
-	config           *common_config.Config
 	messagingService messaging.MessagingService
 }
 
-func NewTapEventPublisherRegistration(config *common_config.Config, msgService messaging.MessagingService) TapHandlerRegistration {
+func NewTapEventPublisherRegistration(msgService messaging.MessagingService) TapHandlerRegistration {
 	return TapHandlerRegistration{
 		ContinueOnError: true,
-		Handler:         &tapEventPublisher{config: config, messagingService: msgService},
+		Handler:         &tapEventPublisher{messagingService: msgService},
 	}
 }
 
 func (h *tapEventPublisher) HandleRequestHeaders(ctx context.Context,
 	req *envoy_v3_ext_proc_pb.ProcessingRequest_RequestHeaders) error {
 
+	cfg := config.TapServiceConfig()
+
 	log.Printf("Publishing request headers event")
-	path, err := findHeaderValue(req, "path")
+
+	host, path, err := findHostAndPath(req)
 	if err != nil {
-		log.Printf("Failed to publish: %v", err)
+		return err
 	}
 
-	artefact, err := common_models.GetArtefactByHostAndPath(h.config.Global.Upstreams, "", path)
+	artefact, err := common_models.GetArtefactByHostAndPath(host, path)
 	if err != nil {
 		return fmt.Errorf("Failed to resolve artefact")
 	}
 
-	topic := h.config.Global.TapService.Publisher.TopicMappings["upstream_request"]
+	topic := cfg.GetPublisherConfig().GetTopicNames().GetUpstreamRequest()
+
+	// TODO: Migrate this to event spec
 	event := common_models.NewArtefactRequestEvent(artefact)
 
 	err = h.messagingService.Publish(topic, event)

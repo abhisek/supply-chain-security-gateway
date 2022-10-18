@@ -5,23 +5,22 @@ import (
 	"os"
 	"time"
 
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
-
 	"github.com/nats-io/nats.go"
+
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
 )
 
 type natsMessagingService struct {
 	connection            *nats.Conn
 	jsonEncodedConnection *nats.EncodedConn
-	config                *common_config.Config
 }
 
-func NewNatsMessagingService(config *common_config.Config) (MessagingService, error) {
+func NewNatsMessagingService(cfg *config_api.MessagingAdapter) (MessagingService, error) {
 	certs := nats.ClientCert(os.Getenv("SERVICE_TLS_CERT"), os.Getenv("SERVICE_TLS_KEY"))
 	rootCA := nats.RootCAs(os.Getenv("SERVICE_TLS_ROOT_CA"))
 
-	log.Printf("Initializing new nats connection with: %s", config.Global.Messaging.Url)
-	conn, err := nats.Connect(config.Global.Messaging.Url,
+	log.Printf("Initializing new nats connection with: %s", cfg)
+	conn, err := nats.Connect(cfg.GetNats().Url,
 		nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(5),
 		nats.ReconnectWait(1*time.Second),
@@ -48,8 +47,7 @@ func NewNatsMessagingService(config *common_config.Config) (MessagingService, er
 		return &natsMessagingService{}, err
 	}
 
-	return &natsMessagingService{config: config,
-		connection:            conn,
+	return &natsMessagingService{connection: conn,
 		jsonEncodedConnection: jsonEncodedConn}, nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/gojek/heimdall/v7"
 	"github.com/gojek/heimdall/v7/hystrix"
 )
@@ -35,8 +36,7 @@ type OsvServiceAdapter struct {
 }
 
 func NewOsvServiceAdapter(config OsvServiceAdapterConfig) *OsvServiceAdapter {
-	backoff := heimdall.NewExponentialBackoff(config.Timeout/time.Second,
-		config.Timeout, 0.5, time.Millisecond*100)
+	backoff := heimdall.NewConstantBackoff(2*time.Second, 100*time.Millisecond)
 
 	client := hystrix.NewClient(
 		hystrix.WithHTTPTimeout(config.Timeout),
@@ -60,6 +60,9 @@ func (svc *OsvServiceAdapter) QueryPackage(ecosystem, name, version string) (V1V
 	rQuery.Package.Ecosystem = &ecosystem
 	rQuery.Package.Name = &name
 
+	logger.Debugf("Querying OSV with: ecosystem:%s name:%s version:%s",
+		ecosystem, name, version)
+
 	body, err := json.Marshal(rQuery)
 	if err != nil {
 		return V1VulnerabilityList{}, err
@@ -67,7 +70,7 @@ func (svc *OsvServiceAdapter) QueryPackage(ecosystem, name, version string) (V1V
 
 	resp, err := svc.client.Post(OsvQueryEndpoint, bytes.NewReader(body), http.Header{})
 	if err != nil {
-		return V1VulnerabilityList{}, nil
+		return V1VulnerabilityList{}, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -77,7 +80,7 @@ func (svc *OsvServiceAdapter) QueryPackage(ecosystem, name, version string) (V1V
 	var vulnList V1VulnerabilityList
 	err = json.NewDecoder(resp.Body).Decode(&vulnList)
 	if err != nil {
-		return V1VulnerabilityList{}, fmt.Errorf("failed to decoded to vulnerability list: %v", err)
+		return V1VulnerabilityList{}, fmt.Errorf("failed to decoded to vulnerability list: %w", err)
 	}
 
 	// No result found

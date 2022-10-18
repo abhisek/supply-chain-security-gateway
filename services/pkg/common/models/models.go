@@ -1,12 +1,14 @@
 package models
 
-const (
-	ArtefactSourceTypeMaven2   = "maven2"
-	ArtefactSourceTypeNpm      = "npm"
-	ArtefactSourceTypePypi     = "pypi"
-	ArtefactSourceTypeRubyGems = "rubygems"
+import (
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
+)
 
-	ArtefactUpstreamAuthTypeNoAuth = "noauth"
+var (
+	ArtefactSourceTypeMaven2   = config_api.GatewayUpstreamType_Maven.String()
+	ArtefactSourceTypeNpm      = config_api.GatewayUpstreamType_Npm.String()
+	ArtefactSourceTypePypi     = config_api.GatewayUpstreamType_PyPI.String()
+	ArtefactSourceTypeRubyGems = config_api.GatewayUpstreamType_RubyGems.String()
 
 	ArtefactLicenseTypeSpdx      = "SPDX"
 	ArtefactLicenseTypeCycloneDx = "CycloneDX"
@@ -81,10 +83,8 @@ type ArtefactLicense struct {
 }
 
 type Artefact struct {
-	Source          ArtefactSource          `json:"source"`
-	Group           string                  `json:"group"`
-	Name            string                  `json:"name"`
-	Version         string                  `json:"version"`
-	Vulnerabilities []ArtefactVulnerability `json:"vulnerabilities"`
-	Licenses        []ArtefactLicense       `json:"licenses"`
+	Source  ArtefactSource `json:"source"`
+	Group   string         `json:"group"`
+	Name    string         `json:"name"`
+	Version string         `json:"version"`
 }

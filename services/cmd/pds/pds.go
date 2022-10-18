@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"strconv"
@@ -8,7 +9,9 @@ import (
 	api "github.com/abhisek/supply-chain-gateway/services/gen"
 
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/obs"
 	"google.golang.org/grpc"
 
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/db"
@@ -17,10 +20,11 @@ import (
 )
 
 func main() {
-	config, err := common_config.LoadGlobal("")
-	if err != nil {
-		log.Fatalf("Failed to load config: %s", err.Error())
-	}
+	logger.Init("dcs")
+	config.Bootstrap("", true)
+
+	tracerShutDown := obs.InitTracing()
+	defer tracerShutDown(context.Background())
 
 	mysqlPort, err := strconv.ParseInt(os.Getenv("MYSQL_SERVER_PORT"), 0, 16)
 	if err != nil {
@@ -39,20 +43,18 @@ func main() {
 		log.Fatalf("Failed to initialize MySQL adapter: %v", err)
 	}
 
-	repository, err := db.NewVulnerabilityRepository(config, mysqlAdapter)
+	repository, err := db.NewVulnerabilityRepository(mysqlAdapter)
 	if err != nil {
 		log.Fatalf("Failed to create vulnerability repository")
 	}
 
-	pdService, err := pds.NewPolicyDataService(config, repository)
+	pdService, err := pds.NewPolicyDataService(repository)
 	if err != nil {
 		log.Fatalf("Failed to create policy data service")
 	}
 
 	common_adapters.StartGrpcMtlsServer("PDS", os.Getenv("PDS_SERVER_NAME"), "0.0.0.0", "9002",
-		[]grpc.ServerOption{grpc.MaxConcurrentStreams(5000),
-			common_adapters.GrpcStreamValidatorInterceptor(),
-			common_adapters.GrpcUnaryValidatorInterceptor()}, func(s *grpc.Server) {
+		[]grpc.ServerOption{grpc.MaxConcurrentStreams(5000)}, func(s *grpc.Server) {
 			api.RegisterPolicyDataServiceServer(s, pdService)
 		})
 }

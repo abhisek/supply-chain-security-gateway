@@ -34,6 +34,12 @@ type PolicyInputVersion struct {
 	Patch int8 `json:"patch"`
 }
 
+type PolicyInputPrincipal struct {
+	UserId    string `json:"userId"`
+	OrgId     string `json:"orgId"`
+	ProjectId string `json:"projectId"`
+}
+
 type PolicyInputTarget struct {
 	Artefact        PolicyEvalTargetArtefact        `json:"artefact"`
 	Upstream        PolicyEvalTargetUpstream        `json:"upstream"`
@@ -42,9 +48,10 @@ type PolicyInputTarget struct {
 }
 
 type PolicyInput struct {
-	Kind    string             `json:"kind"`
-	Version PolicyInputVersion `json:"version"`
-	Target  PolicyInputTarget  `json:"target"`
+	Kind      string               `json:"kind"`
+	Version   PolicyInputVersion   `json:"version"`
+	Target    PolicyInputTarget    `json:"target"`
+	Principal PolicyInputPrincipal `json:"principal"`
 }
 
 type PolicyViolation struct {

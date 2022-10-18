@@ -2,9 +2,9 @@ version: "3.3"
 services:
   envoy:
     image: envoyproxy/envoy:v1.21.1
-    command: envoy -c /config/envoy.yml
+    command: envoy -c /config/envoy.json
     volumes:
-      - ${BOOTSTRAP_ENVOY_FILE:-./config/envoy.yml}:/config/envoy.yml
+      - ${BOOTSTRAP_ENVOY_FILE:-./config/envoy.json}:/config/envoy.json
     ports:
       - "10000:10000"
   mysql-server:
@@ -28,14 +28,14 @@ services:
     build: ./services
     command: pdp-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
-      - ${BOOTSTRAP_BASIC_AUTH_FILE:-./config/gateway-auth-basic}:/auth/basic-auth-credentials
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
+      - ${BOOTSTRAP_BASIC_AUTH_FILE:-./config/gateway-auth-basic.txt}:/auth/basic-auth-credentials.txt
       - ./policies:/policies
       - ./pki/pdp/server.crt:/config/pki/server.crt
       - ./pki/pdp/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
-      GLOBAL_CONFIG_PATH: /config/global.yml
+      GLOBAL_CONFIG_PATH: /config/gateway.json
       PDP_POLICY_PATH: /policies
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
@@ -44,33 +44,41 @@ services:
       PDS_PORT: 9002
       PDP_KAFKA_PONGO_BOOTSTRAP_SERVERS: kafka1-host:9092
       PDP_KAFKA_PONGO_SCHEMA_REGISTRY_URL: http://kafka1-host:8081
+      APP_SERVICE_OBS_ENABLED: ${PDP_SERVICE_OBS_ENABLED:-true}
+      APP_SERVICE_NAME: ${PDP_SERVICE_NAME:-pdp}
+      APP_SERVICE_ENV: ${PDP_SERVICE_ENV:-development}
+      APP_OTEL_EXPORTER_OTLP_ENDPOINT: ${COMMON_OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
     extra_hosts:
       kafka1-host: ${KAFKA_PONGO_HOST}
   tap:
     build: ./services
     command: tap-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
       - ./pki/tap/server.crt:/config/pki/server.crt
       - ./pki/tap/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
-      GLOBAL_CONFIG_PATH: /config/global.yml
+      GLOBAL_CONFIG_PATH: /config/gateway.json
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
+      APP_SERVICE_OBS_ENABLED: ${TAP_SERVICE_OBS_ENABLED:-true}
+      APP_SERVICE_NAME: ${TAP_SERVICE_NAME:-tap}
+      APP_SERVICE_ENV: ${TAP_SERVICE_ENV:-development}
+      APP_OTEL_EXPORTER_OTLP_ENDPOINT: ${COMMON_OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
   dcs:
     depends_on:
       - mysql-server
     build: ./services
     command: dcs-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
       - ./pki/dcs/server.crt:/config/pki/server.crt
       - ./pki/dcs/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
-      GLOBAL_CONFIG_PATH: /config/global.yml
+      GLOBAL_CONFIG_PATH: /config/gateway.json
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
       SERVICE_TLS_ROOT_CA: /config/pki/root.crt
@@ -79,6 +87,10 @@ services:
       MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
       MYSQL_USER: ${MYSQL_DCS_USER}
       MYSQL_PASSWORD: ${MYSQL_DCS_PASSWORD}
+      APP_SERVICE_OBS_ENABLED: ${DCS_SERVICE_OBS_ENABLED:-true}
+      APP_SERVICE_NAME: ${DCS_SERVICE_NAME:-dcs}
+      APP_SERVICE_ENV: ${DCS_SERVICE_ENV:-development}
+      APP_OTEL_EXPORTER_OTLP_ENDPOINT: ${COMMON_OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
   pds:
     depends_on:
       - mysql-server
@@ -86,12 +98,12 @@ services:
     build: ./services
     command: pds-server
     volumes:
-      - ${BOOTSTRAP_CONFIG_FILE:-./config/global.yml}:/config/global.yml
+      - ${BOOTSTRAP_CONFIG_FILE:-./config/gateway.json}:/config/gateway.json
       - ./pki/pds/server.crt:/config/pki/server.crt
       - ./pki/pds/server.key:/config/pki/server.key
       - ./pki/root.crt:/config/pki/root.crt
     environment:
-      GLOBAL_CONFIG_PATH: /config/global.yml
+      GLOBAL_CONFIG_PATH: /config/gateway.json
       PDS_SERVER_NAME: pds
       SERVICE_TLS_CERT: /config/pki/server.crt
       SERVICE_TLS_KEY: /config/pki/server.key
@@ -101,5 +113,9 @@ services:
       MYSQL_DATABASE: ${MYSQL_DCS_DATABASE}
       MYSQL_USER: ${MYSQL_DCS_USER}
       MYSQL_PASSWORD: ${MYSQL_DCS_PASSWORD}
+      APP_SERVICE_OBS_ENABLED: ${PDS_SERVICE_OBS_ENABLED:-true}
+      APP_SERVICE_NAME: ${PDS_SERVICE_NAME:-pds}
+      APP_SERVICE_ENV: ${PDS_SERVICE_ENV:-development}
+      APP_OTEL_EXPORTER_OTLP_ENDPOINT: ${COMMON_OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
 volumes:
   mysql-db: {}

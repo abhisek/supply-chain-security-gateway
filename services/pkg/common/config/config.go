@@ -1,85 +1,121 @@
 package config
 
+/**
+The config module provides access to currently available configuration.
+A repository is used as the source of configuration.
+
+Configuration at a high level is:
+
+1. Bootstrap (can be dynamically updated)
+2. Contextual (depends on current context data)
+*/
+
 import (
-	"errors"
+	"fmt"
 	"os"
 
-	"github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
-	"gopkg.in/yaml.v2"
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
 )
 
-type MessagingConfig struct {
-	Url string `json:"url"`
+type configHolder struct {
+	ctx              any // TODO: Standardize domain context
+	configRepository ConfigRepository
 }
 
-type EventPublisherConfig struct {
-	Type          string            `yaml:"type"`
-	TopicMappings map[string]string `yaml:"topics"`
-}
+var (
+	globalConfig *configHolder = nil
+)
 
-type TapServiceConfig struct {
-	Publisher EventPublisherConfig `yaml:"publisher"`
-}
+func Bootstrap(file string, reloadOnChange bool) {
+	if globalConfig != nil {
+		panic("config is already bootstrapped")
+	}
 
-type PdsClientConfig struct {
-	Host    string `yaml:"host"`
-	Port    string `yaml:"port"`
-	UseMtls bool   `yaml:"mtls"`
-	Type    string `yaml:"type"`
-}
-
-type PdpServiceConfig struct {
-	MonitorMode bool                 `yaml:"monitor_mode"`
-	Publisher   EventPublisherConfig `yaml:"publisher"`
-	PdsClient   PdsClientConfig      `yaml:"pds_client"`
-}
-
-type DcsServiceConfig struct {
-	Publisher EventPublisherConfig `yaml:"publisher"`
-}
-
-type SecretConfig struct {
-	Source string `yaml:"source"`
-	Key    string `yaml:"key"`
-}
-
-type AuthenticatorConfig struct {
-	Type   string            `yaml:"type"`
-	Params map[string]string `yaml:"params"`
-}
-
-type GlobalConfig struct {
-	Upstreams      []models.ArtefactUpStream      `yaml:"upstreams"`
-	Messaging      MessagingConfig                `yaml:"messaging"`
-	TapService     TapServiceConfig               `yaml:"tap"`
-	PdpService     PdpServiceConfig               `yaml:"pdp"`
-	DcsService     DcsServiceConfig               `yaml:"dcs"`
-	Secrets        map[string]SecretConfig        `yaml:"secrets"`
-	Authenticators map[string]AuthenticatorConfig `yaml:"authenticators"`
-}
-
-type Config struct {
-	Global GlobalConfig
-}
-
-func LoadGlobal(file string) (*Config, error) {
 	if file == "" {
 		file = os.Getenv("GLOBAL_CONFIG_PATH")
 		if file == "" {
-			return &Config{}, errors.New("failed to find config path")
+			panic("no config source available")
 		}
 	}
 
-	data, err := os.ReadFile(file)
+	repository, err := NewConfigFileRepository(file, false, reloadOnChange)
 	if err != nil {
-		return &Config{}, err
+		panic(err)
 	}
 
-	var config Config
-	err = yaml.Unmarshal(data, &config.Global)
-	if err != nil {
-		return &Config{}, err
+	globalConfig = &configHolder{
+		configRepository: repository,
+	}
+}
+
+// Get a contextual config
+func Contextual(ctx any) *configHolder {
+	return current().withContext(ctx)
+}
+
+// Returns a wrapped configuration data with the wrapper
+// providing some convenient utility method
+func current() *configHolder {
+	if globalConfig == nil {
+		panic("config is used without bootstrap")
 	}
 
-	return &config, nil
+	return globalConfig
+}
+
+func (cfg *configHolder) withContext(ctx any) *configHolder {
+	return &configHolder{
+		configRepository: cfg.configRepository,
+		ctx:              ctx,
+	}
+}
+
+// Returns the configuration data as per spec
+func g() *config_api.GatewayConfiguration {
+	cfg, err := current().configRepository.LoadGatewayConfiguration()
+	if err != nil {
+		panic(err)
+	}
+
+	return cfg
+}
+
+func GetMessagingConfigByName(name string) (*config_api.MessagingAdapter, error) {
+	if mc, ok := g().Messaging[name]; ok {
+		return mc, nil
+	} else {
+		return nil, fmt.Errorf("messaging adapter not found with name: %s", name)
+	}
+}
+
+func GetAuthenticatorByName(name string) (*config_api.GatewayAuthenticator, error) {
+	if a, ok := g().Authenticators[name]; ok {
+		return a, nil
+	} else {
+		return nil, fmt.Errorf("authenticator not found with name: %s", name)
+	}
+}
+
+func PdpServiceConfig() *config_api.PdpServiceConfig {
+	return g().Services.GetPdp()
+}
+
+func DcsServiceConfig() *config_api.DcsServiceConfig {
+	return g().Services.GetDcs()
+}
+
+func TapServiceConfig() *config_api.TapServiceConfig {
+	return g().Services.GetTap()
+}
+
+func Upstreams() []*config_api.GatewayUpstream {
+	return g().GetUpstreams()
+}
+
+func GetSecret(name string) (*config_api.GatewaySecret, error) {
+	if s, ok := g().Secrets[name]; ok {
+		return s, nil
+	} else {
+		return nil, fmt.Errorf("no secret found with name: %s", name)
+	}
 }

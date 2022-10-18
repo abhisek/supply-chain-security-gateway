@@ -48,6 +48,15 @@ protoc-codegen:
 		--validate_opt=paths=source_relative \
 		./spec/proto/events.proto
 
+	protoc -I ./spec/proto/ \
+		-I ./spec/proto/lib/ -I ./spec/proto/lib/protoc-gen-validate \
+		--go_out=./gen/ \
+		--validate_out="lang=go:./gen/" \
+		--go_opt=paths=source_relative \
+		--validate_opt=paths=source_relative \
+		./spec/proto/config.proto
+
+
 setup:
 	mkdir -p out
 

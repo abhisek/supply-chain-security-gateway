@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -12,6 +13,9 @@ import (
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	grpcotel "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 )
 
 type GrpcAdapterConfigurer func(server *grpc.Server)
@@ -21,22 +25,6 @@ var (
 	NoGrpcDialOptions = []grpc.DialOption{}
 	NoGrpcConfigurer  = func(conn *grpc.ClientConn) {}
 )
-
-func GrpcStreamValidatorInterceptor() grpc.ServerOption {
-	return grpc.StreamInterceptor(
-		grpc_middleware.ChainStreamServer(
-			grpc_validator.StreamServerInterceptor(),
-		),
-	)
-}
-
-func GrpcUnaryValidatorInterceptor() grpc.ServerOption {
-	return grpc.UnaryInterceptor(
-		grpc_middleware.ChainUnaryServer(
-			grpc_validator.UnaryServerInterceptor(),
-		),
-	)
-}
 
 func StartGrpcMtlsServer(name, serverName, host, port string, sopts []grpc.ServerOption, configure GrpcAdapterConfigurer) {
 	tc, err := utils.TlsConfigFromEnvironment(serverName)
@@ -58,6 +46,20 @@ func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configu
 		log.Fatalf("Failed to listen on %s:%s - %s", host, port, err.Error())
 	}
 
+	sopts = append(sopts, grpc.UnaryInterceptor(
+		grpc_middleware.ChainUnaryServer(
+			grpcotel.UnaryServerInterceptor(),
+			grpc_validator.UnaryServerInterceptor(),
+		),
+	))
+
+	sopts = append(sopts, grpc.StreamInterceptor(
+		grpc_middleware.ChainStreamServer(
+			grpcotel.StreamServerInterceptor(),
+			grpc_validator.StreamServerInterceptor(),
+		),
+	))
+
 	server := grpc.NewServer(sopts...)
 	configure(server)
 
@@ -70,7 +72,7 @@ func StartGrpcServer(name, host, port string, sopts []grpc.ServerOption, configu
 func GrpcMtlsClient(name, serverName, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
 	tc, err := grpcTransportCredentials(serverName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to setup client transport credentials: %w", err)
 	}
 
 	dopts = append(dopts, tc)
@@ -85,6 +87,9 @@ func GrpcInsecureClient(name, host, port string, dopts []grpc.DialOption, config
 
 func grpcClient(name, host, port string, dopts []grpc.DialOption, configurer GrpcClientConfigurer) (*grpc.ClientConn, error) {
 	log.Printf("[%s] Connecting to gRPC server %s:%s", name, host, port)
+
+	dopts = append(dopts, grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()))
+	dopts = append(dopts, grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()))
 
 	retry := 5
 	t := 1

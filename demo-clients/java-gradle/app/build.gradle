@@ -26,7 +26,7 @@ repositories {
                 basic(BasicAuthentication)
             }
 
-            username "someUser"
+            username "demo-java-gradle/someUser@someOrg"
             password "somePassword"
         }
     }
@@ -43,6 +43,9 @@ dependencies {
 
     // Vulnerable dependency to trigger example policy
     implementation 'org.apache.logging.log4j:log4j:2.16.0'
+
+    // Dependency confusion test
+    implementation group: 'org.example', name: 'junit-utils', version: '1.0.6.RELEASE'
 }
 
 application {

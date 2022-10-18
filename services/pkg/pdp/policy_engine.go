@@ -38,8 +38,6 @@ func (svc *PolicyEngine) Evaluate(ctx context.Context, input PolicyInput) (Polic
 	svc.lock.Lock()
 	defer svc.lock.Unlock()
 
-	// log.Printf("PolicyInput: %s", utils.Introspect(input))
-
 	rs, err := svc.query.Eval(ctx, rego.EvalInput(input))
 	if err != nil {
 		return PolicyResponse{}, err
@@ -56,7 +54,6 @@ func (svc *PolicyEngine) Evaluate(ctx context.Context, input PolicyInput) (Polic
 		return PolicyResponse{}, err
 	}
 
-	// log.Printf("Policy response: %s", utils.Introspect(p))
 	return p, nil
 }
 

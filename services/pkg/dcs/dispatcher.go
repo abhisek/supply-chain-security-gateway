@@ -1,9 +1,9 @@
 package dcs
 
 import (
-	"log"
 	"sync"
 
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/logger"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/messaging"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 	"github.com/abhisek/supply-chain-gateway/services/pkg/common/utils"
@@ -19,8 +19,13 @@ type eventSubscription[T any] struct {
 
 var dispatcherWg sync.WaitGroup
 
-func registerSubscriber[T any](msgService messaging.MessagingService, subscriber eventSubscription[T]) (messaging.MessagingQueueSubscription, error) {
-	log.Printf("Registering disaptcher name:%s topic:%s group:%s",
+// Register a subscriber to the messaging service and increment
+// wait group. Perform generic event to subscriber specific type
+// conversion and invoke subscriber business logic
+func registerSubscriber[T any](msgService messaging.MessagingService,
+	subscriber eventSubscription[T]) (messaging.MessagingQueueSubscription, error) {
+
+	logger.Infof("Registering disaptcher name:%s topic:%s group:%s",
 		subscriber.name, subscriber.topic, subscriber.group)
 
 	sub, err := msgService.QueueSubscribe(subscriber.topic, subscriber.group, func(msg interface{}) {
@@ -28,12 +33,12 @@ func registerSubscriber[T any](msgService messaging.MessagingService, subscriber
 		if err := utils.MapStruct(msg, &event); err == nil {
 			subscriber.handler(event)
 		} else {
-			log.Printf("Error creating a domain event of type T from event msg: %v", err)
+			logger.Infof("Error creating a domain event of type T from event msg: %v", err)
 		}
 	})
 
 	if err != nil {
-		log.Printf("Error registering queue subscriber: %v", err)
+		logger.Errorf("Error registering queue subscriber: %v", err)
 	}
 
 	dispatcherWg.Add(1)
@@ -41,6 +46,6 @@ func registerSubscriber[T any](msgService messaging.MessagingService, subscriber
 }
 
 func waitForSubscribers() {
-	log.Printf("Dispatcher waiting for queue subscriptions to close")
+	logger.Infof("Dispatcher waiting for queue subscriptions to close")
 	dispatcherWg.Wait()
 }

@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	config_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	pds_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	raya_api "github.com/abhisek/supply-chain-gateway/services/gen"
 	common_adapters "github.com/abhisek/supply-chain-gateway/services/pkg/common/adapters"
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/openssf"
 
 	"google.golang.org/grpc"
 )
@@ -21,25 +22,27 @@ const (
 type PolicyDataServiceResponse struct {
 	Vulnerabilities []common_models.ArtefactVulnerability `json:"vulnerabilities"`
 	Licenses        []common_models.ArtefactLicense       `json:"licenses"`
+	Scorecard       openssf.ProjectScorecard
 }
 
 type PolicyDataClientInterface interface {
 	GetPackageMetaByVersion(ctx context.Context, ecosystem, group, name, version string) (PolicyDataServiceResponse, error)
 }
 
-func NewPolicyDataServiceClient(cfg common_config.PdpServiceConfig) (PolicyDataClientInterface, error) {
-	grpconn, err := buildGrpcClient(cfg.PdsClient.Host, cfg.PdsClient.Port, cfg.PdsClient.UseMtls)
+func NewPolicyDataServiceClient(cfg *config_api.PdsClientConfig) (PolicyDataClientInterface, error) {
+	grpconn, err := buildGrpcClient(cfg.GetCommon().GetHost(),
+		fmt.Sprint(cfg.GetCommon().GetPort()), cfg.GetCommon().GetMtls())
 	if err != nil {
 		return nil, err
 	}
 
-	switch cfg.PdsClient.Type {
-	case pdsClientTypeLocal:
+	switch cfg.Type {
+	case config_api.PdsClientType_LOCAL:
 		return NewLocalPolicyDataClient(grpconn), nil
-	case pdsClientTypeRaya:
+	case config_api.PdsClientType_RAYA:
 		return NewRayaPolicyDataServiceClient(grpconn), nil
 	default:
-		return nil, fmt.Errorf("unknown pds client type:%s", cfg.PdsClient.Type)
+		return nil, fmt.Errorf("unknown pds client type:%s", cfg.Type.String())
 	}
 }
 

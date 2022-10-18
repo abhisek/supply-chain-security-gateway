@@ -39,3 +39,11 @@ violations[{"message": msg, "code": code}] {
     [data.UNACCEPTABLE_VULNERABILITIES])
   code := 1003
 }
+
+violations[{"message": msg, "code": code}] {
+  input.target.artefact.source.type = "maven2"
+  glob.match("org.example.**", ["."], input.target.artefact.group)
+
+  msg := "Private namespace lookup denied"
+  code := 1004
+}

@@ -3,7 +3,7 @@ package dcs
 import (
 	"log"
 
-	common_config "github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
+	"github.com/abhisek/supply-chain-gateway/services/pkg/common/config"
 	common_models "github.com/abhisek/supply-chain-gateway/services/pkg/common/models"
 )
 
@@ -12,20 +12,20 @@ const (
 	sbomCollectorName      = "SBOM Data Collector"
 )
 
-type sbomCollector struct {
-	config *common_config.Config
-}
+type sbomCollector struct{}
 
-func sbomCollectorSubscription(config *common_config.Config) eventSubscription[common_models.Artefact] {
-	h := &sbomCollector{config: config}
+func sbomCollectorSubscription() eventSubscription[common_models.Artefact] {
+	h := &sbomCollector{}
 	return h.subscription()
 }
 
 func (s *sbomCollector) subscription() eventSubscription[common_models.Artefact] {
+	cfg := config.TapServiceConfig()
+
 	return eventSubscription[common_models.Artefact]{
 		name:    sbomCollectorName,
 		group:   sbomCollectorGroupName,
-		topic:   s.config.Global.TapService.Publisher.TopicMappings["upstream_request"],
+		topic:   cfg.GetPublisherConfig().GetTopicNames().GetUpstreamRequest(),
 		handler: s.handler(),
 	}
 }

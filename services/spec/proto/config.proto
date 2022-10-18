@@ -1,0 +1,217 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/abhisek/supply-chain-gateway/services/gen";
+
+import "validate/validate.proto";
+
+// Proto3 lacks string enums.
+// The upstream type is used by PDP to construct artifact struct
+// by parsing the path name as per ecosystem convention
+// Aligning the ecosystem with OSV schema
+// https://ossf.github.io/osv-schema/#affectedpackage-field
+enum GatewayUpstreamType {
+  InvalidUpStreamType = 0;
+  Maven = 100;
+  Npm = 200;
+  PyPI = 300;
+  RubyGems = 400;
+  Go = 500;
+}
+
+// To allow default upstreams to be attached
+enum GatewayUpstreamManagementType {
+  InvalidManagementType = 0;
+  EnvironmentAdmin = 100;
+  GatewayAdmin = 200;
+}
+
+enum GatewayAuthenticationType {
+  InvalidAuthType = 0;
+  NoAuth = 100;
+  Basic = 200;
+  OIDC = 300;
+}
+
+enum GatewaySecretSource {
+  InvalidSecretSource = 0;
+  Environment = 100;
+}
+
+message GatewayAuthenticationProvider {
+  GatewayAuthenticationType type = 1;
+  string provider = 2;
+}
+
+// Route matching algorithm to decide the order of matching
+message GatewayUpstreamRoute {
+  string host = 1;
+  string path_prefix = 2;
+  string path_pattern = 3;
+
+  string host_rewrite_value = 4;
+  string path_prefix_rewrite_value = 5;
+}
+
+message GatewayUpstreamRepository {
+  string host = 1;
+  string port = 2;
+  bool tls = 3;
+  string sni = 4;
+  GatewayAuthenticationProvider authentication = 5;
+}
+
+message GatewayInfo {
+  string id = 1;
+  string name = 2;
+  string domain = 3;
+}
+
+message GatewayUpstream {
+  GatewayUpstreamType type = 1;
+  GatewayUpstreamManagementType management_type = 2;
+  string name = 3;
+  GatewayAuthenticationProvider authentication = 4;
+  GatewayUpstreamRoute route = 5;
+  GatewayUpstreamRepository repository = 6;
+}
+
+// Credentials should NOT be plain text
+// but interpreted as htpasswd bcrypt encrypted
+// https://httpd.apache.org/docs/2.4/programs/htpasswd.html
+message GatewayAuthenticatorBasicAuth {
+  map<string, string> credentials = 1;
+
+  // Load from file source
+  // This can be a local file or an object storage path such as S3
+  // depending on the capability of the repository loading
+  // the configuration data
+  string path = 2;
+}
+
+message GatewayAuthenticator {
+  GatewayAuthenticationType type = 1;
+
+  oneof config {
+    GatewayAuthenticatorBasicAuth basic_auth = 2;
+  }
+}
+
+message GatewaySecretSourceEnvironment {
+  string key = 1;
+}
+
+message GatewaySecret {
+  GatewaySecretSource source = 1;
+  oneof value {
+    GatewaySecretSourceEnvironment environment = 2;
+  }
+}
+
+message MessagingAdapter {
+  enum AdapterType {
+    NATS = 0;
+    KAFKA = 1;
+  }
+
+  message NatsAdapterConfig {
+    string url = 1;
+  }
+
+  message KafkaAdapterConfig {
+    repeated string bootstrap_servers = 1;
+    string schema_registry_url = 2;
+  }
+
+  AdapterType type = 1;
+
+  // https://developers.google.com/protocol-buffers/docs/proto#oneof
+  oneof config {
+    NatsAdapterConfig nats = 2;
+    KafkaAdapterConfig kafka = 3;
+  }
+}
+
+message TapServiceConfig {
+  message PublisherConfig {
+    message TopicNames {
+      string upstream_request = 1;
+      string upstream_response = 2;
+    }
+
+    string messaging_adapter_name = 1;
+    TopicNames topic_names = 2;
+  }
+
+  PublisherConfig publisher_config = 1;
+}
+
+enum PdsClientType {
+  LOCAL = 0;
+  RAYA = 1;
+}
+
+message PdsClientCommonConfig {
+  string host = 1;
+  int32 port = 2;
+  bool mtls = 3;
+}
+
+message PdsClientConfig {
+  PdsClientType type = 1;
+  oneof config {
+    PdsClientCommonConfig common = 2;
+  };
+}
+
+message PdpServiceConfig {
+  message PublisherConfig {
+    message TopicNames {
+      string policy_audit = 1 [(validate.rules).string = {min_len: 3, max_len: 255}];
+    }
+
+    string messaging_adapter_name = 1 [(validate.rules).string = {min_len: 3, max_len: 255}];
+    TopicNames topic_names = 2 [(validate.rules).message.required = true];
+  }
+
+  bool monitor_mode = 1;
+  PdsClientConfig pds_client = 2;
+  PublisherConfig publisher_config = 3;
+}
+
+message DcsServiceConfig {
+  enum StorageAdapterType {
+    MYSQL = 0;
+  }
+
+  bool active = 1;
+  StorageAdapterType storage_type = 2;
+
+  // TODO: Introduce storage configurations similar to messaging
+  // Services can refer to the config by name
+  string storage_adapter_config_name = 3; // [(validate.rules).string = {min_len: 3, max_len: 255}]
+
+  string messaging_adapter_name = 4 [(validate.rules).string = {min_len: 3, max_len: 255}];
+}
+
+message GatewayConfiguration {
+  message Listener {
+    string host = 1 [(validate.rules).string = {min_len: 7, max_len: 255}];
+    uint32 port = 2 [(validate.rules).uint32.lt = 65535];
+  }
+
+  GatewayInfo info = 1 [(validate.rules).message.required = true];
+  Listener listener = 2 [(validate.rules).message.required = true];
+  repeated GatewayUpstream upstreams = 3;
+  map<string, GatewayAuthenticator> authenticators = 4;
+  map<string, GatewaySecret> secrets = 5;
+  map<string, MessagingAdapter> messaging = 6;
+
+  message ServiceConfig {
+    PdpServiceConfig pdp = 1;
+    TapServiceConfig tap = 2;
+    DcsServiceConfig dcs = 3;
+  }
+
+  ServiceConfig services = 7 [(validate.rules).message.required = true];
+}

@@ -55,11 +55,53 @@ message PackageVersionMetaQueryRequest {
   PackageVersion package_version = 1;
 }
 
+/**
+  Scorecard Specification for a project if exists
+**/
+
+message ProjectScorecardCheck {
+  string reason = 1;
+  float score = 2;
+}
+
+message ProjectScorecardChecks {
+  ProjectScorecardCheck binary_artifacts = 1;
+  ProjectScorecardCheck branch_protection = 2;
+  ProjectScorecardCheck cii_best_practices = 3;
+  ProjectScorecardCheck code_review = 4;
+  ProjectScorecardCheck dangerous_workflow = 5;
+  ProjectScorecardCheck dependency_update_tool = 6;
+  ProjectScorecardCheck fuzzing = 7;
+  ProjectScorecardCheck license = 8;
+  ProjectScorecardCheck maintained = 9;
+  ProjectScorecardCheck packaging = 10;
+  ProjectScorecardCheck pinned_dependencies = 11;
+  ProjectScorecardCheck sast = 12;
+  ProjectScorecardCheck security_policy = 13;
+  ProjectScorecardCheck signed_releases = 14;
+  ProjectScorecardCheck vulnerabilities = 15;
+  ProjectScorecardCheck token_permissions = 16;
+}
+
+message ProjectScorecardRepo {
+  string name = 1;
+  string commit = 2;
+}
+
+message ProjectScorecard {
+  uint64 timestamp = 1;
+  float score = 2;
+  ProjectScorecardRepo repo = 3;
+  ProjectScorecardChecks checks = 4;
+  string version = 5;
+}
+
 message PackageVersionMetaQueryResponse {
   PackageVersion package_version = 1;
 
   repeated string licenses = 2;             // SPDX license names
   repeated PackageAdvisory advisories = 3;  // Vulnerabilities
+  ProjectScorecard project_scorecard = 4;   // Project scorecard
 }
 
 service Raya {

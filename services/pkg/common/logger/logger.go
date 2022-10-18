@@ -1,6 +1,8 @@
 package logger
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+)
 
 var (
 	defaultLogger = zap.NewNop()
@@ -24,11 +26,11 @@ func Init(svc string) {
 }
 
 func zapConfig() zap.Config {
-	return zap.NewProductionConfig()
+	return zap.NewDevelopmentConfig()
 }
 
 func zapBuild(config zap.Config) (*zap.Logger, error) {
-	return config.Build()
+	return config.Build(zap.AddCallerSkip(1))
 }
 
 func Infof(msg string, args ...any) {
@@ -41,4 +43,25 @@ func Warnf(msg string, args ...any) {
 
 func Errorf(msg string, args ...any) {
 	sugarLogger.Errorf(msg, args...)
+}
+
+func Fatalf(msg string, args ...any) {
+	sugarLogger.Fatalf(msg, args...)
+}
+
+func Debugf(msg string, args ...any) {
+	sugarLogger.Debugf(msg, args...)
+}
+
+func With(args map[string]any) *zap.SugaredLogger {
+	var fields []zap.Field
+	for key, value := range args {
+		fields = append(fields, zap.Any(key, value))
+	}
+
+	return defaultLogger.With(fields...).WithOptions(zap.AddCallerSkip(1)).Sugar()
+}
+
+func WithRequestID(id string) *zap.SugaredLogger {
+	return With(map[string]any{"request-id": id})
 }
