@@ -1,3 +1,5 @@
+**Archived:** This project is now developed at https://github.com/safedep/gateway
+
 # Supply Chain Security Gateway
 
 A reference architecture and **<ins>proof of concept implementation</ins>** of a supply chain security gateway with the goal of enforcing sane security policies to an organization's consumption of 3rd party software (dependencies) in its own products.
